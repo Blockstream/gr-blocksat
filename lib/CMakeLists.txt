@@ -26,27 +26,27 @@ include_directories(${Boost_INCLUDE_DIR})
 link_directories(${Boost_LIBRARY_DIRS})
 
 list(APPEND blockstream_sources
-    frame_sync_fast_impl.cc
-    turbo_encoder_impl.cc
-    turbo_decoder_impl.cc
-		runtime_error.cpp
-		invalid_argument.cpp
-		length_error.cpp
-		unimplemented_error.cpp
-  	exception.cpp
-		Encoder_turbo.cpp
-		Encoder_RSC_generic_sys.cpp
-		Encoder_RSC_sys.cpp
-		Decoder_turbo_fast.cpp
-		Decoder_turbo.cpp
-		Decoder_NO.cpp
-    mer_measurement_impl.cc
-    da_carrier_phase_rec_impl.cc
-    nco_cc_impl.cc
-    wrap_fft_index_impl.cc
-    exponentiate_const_cci_impl.cc
-    runtime_cfo_ctrl_impl.cc
     argpeak_impl.cc
+    da_carrier_phase_rec_impl.cc
+    exponentiate_const_cci_impl.cc
+    frame_sync_fast_impl.cc
+    mer_measurement_impl.cc
+    nco_cc_impl.cc
+    runtime_cfo_ctrl_impl.cc
+    turbo_decoder_impl.cc
+    turbo_encoder_impl.cc
+    wrap_fft_index_impl.cc
+    aff3ct/Decoder_NO.cpp
+    aff3ct/Decoder_turbo.cpp
+    aff3ct/Decoder_turbo_fast.cpp
+    aff3ct/Encoder_RSC_generic_sys.cpp
+    aff3ct/Encoder_RSC_sys.cpp
+    aff3ct/Encoder_turbo.cpp
+    aff3ct/exception.cpp
+    aff3ct/invalid_argument.cpp
+    aff3ct/length_error.cpp
+    aff3ct/runtime_error.cpp
+    aff3ct/unimplemented_error.cpp
 )
 #		bash_tools.cpp
 #		cannot_allocate.cpp
