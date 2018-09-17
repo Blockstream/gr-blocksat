@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<block>
+  <name>Non-blocking File Source</name>
+  <key>blockstream_file_source_nonblock</key>
+  <category>[Blockstream]/File Operators</category>
+  <import>import blockstream</import>
+  <make>blockstream.file_source_nonblock($file_name, $poling_rate)</make>
+  <param>
+    <name>Pipe Name</name>
+    <key>file_name</key>
+    <type>string</type>
+  </param>
+  <param>
+    <name>Poling Rate (bits per second)</name>
+    <key>poling_rate</key>
+    <type>int</type>
+  </param>
+  <source>
+    <name>out</name>
+    <type>byte</type>
+  </source>
+</block>

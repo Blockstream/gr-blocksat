@@ -18,13 +18,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef INCLUDED_MODS_RUNTIME_CFO_CTRL_IMPL_H
-#define INCLUDED_MODS_RUNTIME_CFO_CTRL_IMPL_H
+#ifndef INCLUDED_BLOCKSTREAM_RUNTIME_CFO_CTRL_IMPL_H
+#define INCLUDED_BLOCKSTREAM_RUNTIME_CFO_CTRL_IMPL_H
 
-#include <mods/runtime_cfo_ctrl.h>
+#include <blockstream/runtime_cfo_ctrl.h>
 
 namespace gr {
-  namespace mods {
+  namespace blockstream {
 
     class runtime_cfo_ctrl_impl : public runtime_cfo_ctrl
     {
@@ -55,7 +55,7 @@ namespace gr {
 
     };
 
-  } // namespace mods
+  } // namespace blockstream
 } // namespace gr
 
-#endif /* INCLUDED_MODS_RUNTIME_CFO_CTRL_IMPL_H */
+#endif /* INCLUDED_BLOCKSTREAM_RUNTIME_CFO_CTRL_IMPL_H */

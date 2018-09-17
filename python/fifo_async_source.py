@@ -20,7 +20,7 @@
 # 
 
 from gnuradio import gr, blocks
-import mods
+import blockstream
 
 class fifo_async_source(gr.hier_block2):
     """
@@ -37,14 +37,14 @@ class fifo_async_source(gr.hier_block2):
         ##################################################
         # Blocks
         ##################################################
-        self.mods_file_source_nonblock_0 = mods.file_source_nonblock(fifo_file, poling_rate)
+        self.blockstream_file_source_nonblock_0 = blockstream.file_source_nonblock(fifo_file, poling_rate)
         self.blocks_stream_to_tagged_stream_0 = blocks.stream_to_tagged_stream(gr.sizeof_char, 1, pkt_size, "packet_len")
         self.blocks_tagged_stream_to_pdu_0 = blocks.tagged_stream_to_pdu(blocks.byte_t, 'packet_len')
 
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.mods_file_source_nonblock_0, 0), (self.blocks_stream_to_tagged_stream_0, 0))    
+        self.connect((self.blockstream_file_source_nonblock_0, 0), (self.blocks_stream_to_tagged_stream_0, 0))    
         self.connect((self.blocks_stream_to_tagged_stream_0, 0), (self.blocks_tagged_stream_to_pdu_0, 0))    
         self.msg_connect((self.blocks_tagged_stream_to_pdu_0, 'pdus'), (self,"async_pdu"))    
 

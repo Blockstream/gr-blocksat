@@ -33,7 +33,7 @@
 #define CFO_EST_VAR_THRESHOLD  10
 
 namespace gr {
-  namespace mods {
+  namespace blockstream {
 
     runtime_cfo_ctrl::sptr
     runtime_cfo_ctrl::make(int avg_len, float abs_cfo_threshold, int rf_center_freq)
@@ -205,5 +205,5 @@ namespace gr {
       return d_cfo_est_converged;
     }
 
-  } /* namespace mods */
+  } /* namespace blockstream */
 } /* namespace gr */

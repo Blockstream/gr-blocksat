@@ -20,13 +20,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef INCLUDED_MODS_ARGPEAK_IMPL_H
-#define INCLUDED_MODS_ARGPEAK_IMPL_H
+#ifndef INCLUDED_BLOCKSTREAM_ARGPEAK_IMPL_H
+#define INCLUDED_BLOCKSTREAM_ARGPEAK_IMPL_H
 
-#include <mods/argpeak.h>
+#include <blockstream/argpeak.h>
 
 namespace gr {
-  namespace mods {
+  namespace blockstream {
 
     class argpeak_impl : public argpeak
     {
@@ -43,7 +43,7 @@ namespace gr {
                gr_vector_void_star &output_items);
     };
 
-  } /* namespace mods */
+  } /* namespace blockstream */
 } /* namespace gr */
 
-#endif /* INCLUDED_MODS_ARGPEAK_IMPL_H */
+#endif /* INCLUDED_BLOCKSTREAM_ARGPEAK_IMPL_H */

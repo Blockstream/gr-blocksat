@@ -691,7 +691,7 @@ Its step response reaches
     </param>
   </block>
   <block>
-    <key>mods_argpeak</key>
+    <key>blockstream_argpeak</key>
     <param>
       <key>alias</key>
       <value></value>
@@ -723,7 +723,7 @@ first.</value>
     </param>
     <param>
       <key>id</key>
-      <value>mods_argpeak_0</value>
+      <value>blockstream_argpeak_0</value>
     </param>
     <param>
       <key>maxoutbuf</key>
@@ -743,7 +743,7 @@ first.</value>
     </param>
   </block>
   <block>
-    <key>mods_exponentiate_const_cci</key>
+    <key>blockstream_exponentiate_const_cci</key>
     <param>
       <key>alias</key>
       <value></value>
@@ -774,7 +774,7 @@ first.</value>
     </param>
     <param>
       <key>id</key>
-      <value>mods_exponentiate_const_cci_0</value>
+      <value>blockstream_exponentiate_const_cci_0</value>
     </param>
     <param>
       <key>maxoutbuf</key>
@@ -794,7 +794,7 @@ first.</value>
     </param>
   </block>
   <block>
-    <key>mods_runtime_cfo_ctrl</key>
+    <key>blockstream_runtime_cfo_ctrl</key>
     <param>
       <key>abs_cfo_threshold</key>
       <value>abs_cfo_threshold</value>
@@ -830,7 +830,7 @@ is approx. 7*(1/alpha).</value>
     </param>
     <param>
       <key>id</key>
-      <value>mods_runtime_cfo_ctrl_0</value>
+      <value>blockstream_runtime_cfo_ctrl_0</value>
     </param>
     <param>
       <key>maxoutbuf</key>
@@ -846,7 +846,7 @@ is approx. 7*(1/alpha).</value>
     </param>
   </block>
   <block>
-    <key>mods_wrap_fft_index</key>
+    <key>blockstream_wrap_fft_index</key>
     <param>
       <key>alias</key>
       <value></value>
@@ -878,7 +878,7 @@ negative frequencies</value>
     </param>
     <param>
       <key>id</key>
-      <value>mods_wrap_fft_index_0</value>
+      <value>blockstream_wrap_fft_index_0</value>
     </param>
     <param>
       <key>maxoutbuf</key>
@@ -1228,13 +1228,13 @@ negative frequencies</value>
   </connection>
   <connection>
     <source_block_id>blocks_moving_average_xx_0</source_block_id>
-    <sink_block_id>mods_runtime_cfo_ctrl_0</sink_block_id>
+    <sink_block_id>blockstream_runtime_cfo_ctrl_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>1</sink_key>
   </connection>
   <connection>
     <source_block_id>blocks_moving_average_xx_0_0</source_block_id>
-    <sink_block_id>mods_runtime_cfo_ctrl_0</sink_block_id>
+    <sink_block_id>blockstream_runtime_cfo_ctrl_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>2</sink_key>
   </connection>
@@ -1270,7 +1270,7 @@ negative frequencies</value>
   </connection>
   <connection>
     <source_block_id>logpwrfft_x_0</source_block_id>
-    <sink_block_id>mods_argpeak_0</sink_block_id>
+    <sink_block_id>blockstream_argpeak_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
@@ -1281,32 +1281,32 @@ negative frequencies</value>
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>mods_argpeak_0</source_block_id>
+    <source_block_id>blockstream_argpeak_0</source_block_id>
     <sink_block_id>virtual_sink_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>mods_exponentiate_const_cci_0</source_block_id>
+    <source_block_id>blockstream_exponentiate_const_cci_0</source_block_id>
     <sink_block_id>logpwrfft_x_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>mods_runtime_cfo_ctrl_0</source_block_id>
+    <source_block_id>blockstream_runtime_cfo_ctrl_0</source_block_id>
     <sink_block_id>pad_sink_2</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>mods_wrap_fft_index_0</source_block_id>
+    <source_block_id>blockstream_wrap_fft_index_0</source_block_id>
     <sink_block_id>blocks_short_to_float_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
     <source_block_id>pad_source_0</source_block_id>
-    <sink_block_id>mods_exponentiate_const_cci_0</sink_block_id>
+    <sink_block_id>blockstream_exponentiate_const_cci_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
@@ -1324,13 +1324,13 @@ negative frequencies</value>
   </connection>
   <connection>
     <source_block_id>virtual_source_0</source_block_id>
-    <sink_block_id>mods_runtime_cfo_ctrl_0</sink_block_id>
+    <sink_block_id>blockstream_runtime_cfo_ctrl_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
     <source_block_id>virtual_source_1</source_block_id>
-    <sink_block_id>mods_wrap_fft_index_0</sink_block_id>
+    <sink_block_id>blockstream_wrap_fft_index_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>

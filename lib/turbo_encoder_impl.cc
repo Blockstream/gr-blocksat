@@ -28,7 +28,7 @@
 #undef _DEBUG
 
 namespace gr {
-  namespace mods {
+  namespace blockstream {
 
     turbo_encoder::sptr
     turbo_encoder::make(int N, int K)
@@ -141,6 +141,6 @@ namespace gr {
     }   
 
 
-  } /* namespace mods */
+  } /* namespace blockstream */
 } /* namespace gr */
 

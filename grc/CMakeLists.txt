@@ -18,22 +18,22 @@
 # Boston, MA 02110-1301, USA.
 
 install(FILES
-    mods_frame_sync_fast.xml
-    mods_file_source_nonblock.xml
-    mods_file_sink_nonblock.xml
-    mods_fifo_async_source.xml
-    mods_fifo_async_sink.xml
-    mods_turbo_encoder.xml
-    mods_turbo_decoder.xml
-    mods_mer_measurement.xml
-    mods_da_carrier_phase_rec.xml
-    mods_nco_cc.xml
-    mods_ffw_coarse_freq_rec.xml
-    mods_wrap_fft_index.xml
-    mods_frame_synchronizer.xml
-    mods_exponentiate_const_cci.xml
-    mods_runtime_cfo_ctrl.xml
-    mods_variable_tuning_control.xml
-    mods_variable_rx_logger.xml
-    mods_argpeak.xml DESTINATION share/gnuradio/grc/blocks
+    blockstream_frame_sync_fast.xml
+    blockstream_file_source_nonblock.xml
+    blockstream_file_sink_nonblock.xml
+    blockstream_fifo_async_source.xml
+    blockstream_fifo_async_sink.xml
+    blockstream_turbo_encoder.xml
+    blockstream_turbo_decoder.xml
+    blockstream_mer_measurement.xml
+    blockstream_da_carrier_phase_rec.xml
+    blockstream_nco_cc.xml
+    blockstream_ffw_coarse_freq_rec.xml
+    blockstream_wrap_fft_index.xml
+    blockstream_frame_synchronizer.xml
+    blockstream_exponentiate_const_cci.xml
+    blockstream_runtime_cfo_ctrl.xml
+    blockstream_variable_tuning_control.xml
+    blockstream_variable_rx_logger.xml
+    blockstream_argpeak.xml DESTINATION share/gnuradio/grc/blocks
 )

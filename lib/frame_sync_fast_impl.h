@@ -18,13 +18,13 @@
 * Boston, MA 02110-1301, USA.
 */
 
-#ifndef INCLUDED_MODS_FRAME_SYNC_FAST_IMPL_H
-#define INCLUDED_MODS_FRAME_SYNC_FAST_IMPL_H
+#ifndef INCLUDED_BLOCKSTREAM_FRAME_SYNC_FAST_IMPL_H
+#define INCLUDED_BLOCKSTREAM_FRAME_SYNC_FAST_IMPL_H
 
-#include <mods/frame_sync_fast.h>
+#include <blockstream/frame_sync_fast.h>
 
 namespace gr {
-  namespace mods {
+  namespace blockstream {
 
     class frame_sync_fast_impl : public frame_sync_fast
     {
@@ -91,7 +91,7 @@ namespace gr {
         gr_vector_void_star &output_items);
 
       };
-    } // namespace mods
+    } // namespace blockstream
   } // namespace gr
 
-  #endif /* INCLUDED_MODS_FRAME_SYNC_FAST_IMPL_H */
+  #endif /* INCLUDED_BLOCKSTREAM_FRAME_SYNC_FAST_IMPL_H */

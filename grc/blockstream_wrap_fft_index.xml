@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<block>
+  <name>FFT Index Wrapper</name>
+  <key>blockstream_wrap_fft_index</key>
+  <category>[Blockstream]/Math</category>
+  <import>import blockstream</import>
+  <make>blockstream.wrap_fft_index($fft_size)</make>
+  <param>
+    <name>FFT Size</name>
+    <key>fft_size</key>
+    <type>int</type>
+  </param>
+  <sink>
+    <name>in</name>
+    <type>short</type>
+  </sink>
+  <source>
+    <name>out</name>
+    <type>short</type>
+  </source>
+</block>

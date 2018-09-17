@@ -29,7 +29,7 @@
 #include <volk/volk.h>
 
 namespace gr {
-  namespace mods {
+  namespace blockstream {
 
     exponentiate_const_cci::sptr
     exponentiate_const_cci::make(int exponent, size_t vlen)
@@ -97,5 +97,5 @@ namespace gr {
       return noutput_items;
     }
 
-  } /* namespace mods */
+  } /* namespace blockstream */
 } /* namespace gr */

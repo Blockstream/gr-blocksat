@@ -1,7 +1,9 @@
-title: The MODS OOT Module
-brief: Short description of gr-mods
+title: Blockstream Satellite Receiver OOT Module
+brief: Blockstream Satellite receiver signal processing blocks.
 tags: # Tags are arbitrary, but look at CGRAN what other authors are using
   - sdr
+  - blockstream
+  - bitcoin
 author:
   - Author Name <authors@email.address>
 copyright_owner:
@@ -11,6 +13,6 @@ license:
 #website: <module_website> # If you have a separate project website, put it here
 #icon: <icon_url> # Put a URL to a square image here that will be used as an icon on CGRAN
 ---
-A longer, multi-line description of gr-mods.
+A longer, multi-line description of gr-blockstream.
 You may use some *basic* Markdown here.
 If left empty, it will try to find a README file instead.

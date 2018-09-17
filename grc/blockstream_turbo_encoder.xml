@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<block>
+  <name>Turbo Encoder</name>
+  <key>blockstream_turbo_encoder</key>
+  <category>[Blockstream]/Error Coding</category>
+  <import>import blockstream</import>
+  <make>blockstream.turbo_encoder($N, $K)</make>
+  <param>
+    <name>dataword_len</name>
+    <key>K</key>
+    <type>int</type>
+  </param>
+  <param>
+    <name>codeword_len</name>
+    <key>N</key>
+    <type>int</type>
+  </param>
+  <sink>
+    <name>in</name>
+    <type>byte</type>
+  </sink>
+  <source>
+    <name>out</name>
+    <type>byte</type>
+  </source>
+</block>

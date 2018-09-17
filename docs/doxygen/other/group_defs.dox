@@ -1,6 +1,6 @@
 /*!
- * \defgroup block GNU Radio MODS C++ Signal Processing Blocks
- * \brief All C++ blocks that can be used from the MODS GNU Radio
+ * \defgroup block GNU Radio BLOCKSTREAM C++ Signal Processing Blocks
+ * \brief All C++ blocks that can be used from the BLOCKSTREAM GNU Radio
  *        module are listed here or in the subcategories below.
  *
  */

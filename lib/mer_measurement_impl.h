@@ -18,13 +18,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef INCLUDED_MODS_MER_MEASUREMENT_IMPL_H
-#define INCLUDED_MODS_MER_MEASUREMENT_IMPL_H
+#ifndef INCLUDED_BLOCKSTREAM_MER_MEASUREMENT_IMPL_H
+#define INCLUDED_BLOCKSTREAM_MER_MEASUREMENT_IMPL_H
 
-#include <mods/mer_measurement.h>
+#include <blockstream/mer_measurement.h>
 
 namespace gr {
-  namespace mods {
+  namespace blockstream {
 
     class mer_measurement_impl : public mer_measurement
     {
@@ -50,7 +50,7 @@ namespace gr {
       float get_snr();
     };
 
-  } // namespace mods
+  } // namespace blockstream
 } // namespace gr
 
-#endif /* INCLUDED_MODS_MER_MEASUREMENT_IMPL_H */
+#endif /* INCLUDED_BLOCKSTREAM_MER_MEASUREMENT_IMPL_H */

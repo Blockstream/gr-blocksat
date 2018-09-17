@@ -21,7 +21,7 @@
 
 from gnuradio import gr, gr_unittest
 from gnuradio import blocks
-import mods_swig as mods
+import blockstream_swig as blockstream
 
 class qa_turbo_encoder (gr_unittest.TestCase):
 
@@ -37,7 +37,7 @@ class qa_turbo_encoder (gr_unittest.TestCase):
         in_vec = [1%2 for i in range(K)]
         # set up fg
         src = blocks.vector_source_b(in_vec)
-        dut = mods.turbo_encoder(N, K);
+        dut = blockstream.turbo_encoder(N, K);
         snk = blocks.vector_sink_b()
         self.tb.connect (src, dut, snk)
         self.tb.run ()

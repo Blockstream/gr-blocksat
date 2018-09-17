@@ -18,10 +18,10 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef INCLUDED_MODS_TURBO_ENCODER_IMPL_H
-#define INCLUDED_MODS_TURBO_ENCODER_IMPL_H
+#ifndef INCLUDED_BLOCKSTREAM_TURBO_ENCODER_IMPL_H
+#define INCLUDED_BLOCKSTREAM_TURBO_ENCODER_IMPL_H
 
-#include <mods/turbo_encoder.h>
+#include <blockstream/turbo_encoder.h>
 
 #include "Tools/types.h"
 #include "Module/Interleaver/LTE/Interleaver_LTE.hpp"
@@ -33,7 +33,7 @@
 using namespace aff3ct;
 
 namespace gr {
-  namespace mods {
+  namespace blockstream {
 
     class turbo_encoder_impl : public turbo_encoder
     {
@@ -63,8 +63,8 @@ namespace gr {
                     gr_vector_int& ninput_items_required);
     };
 
-  } // namespace mods
+  } // namespace blockstream
 } // namespace gr
 
-#endif /* INCLUDED_MODS_TURBO_ENCODER_IMPL_H */
+#endif /* INCLUDED_BLOCKSTREAM_TURBO_ENCODER_IMPL_H */
 

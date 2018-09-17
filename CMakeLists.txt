@@ -21,7 +21,7 @@
 # Project setup
 ########################################################################
 cmake_minimum_required(VERSION 2.6)
-project(gr-mods CXX C)
+project(gr-blockstream CXX C)
 enable_testing()
 
 include(CheckCXXCompilerFlag)
@@ -105,7 +105,7 @@ set(Boost_ADDITIONAL_VERSIONS
 find_package(Boost "1.35" COMPONENTS filesystem system)
 
 if(NOT Boost_FOUND)
-    message(FATAL_ERROR "Boost required to compile mods")
+    message(FATAL_ERROR "Boost required to compile blockstream")
 endif()
 
 ########################################################################
@@ -114,7 +114,7 @@ endif()
 include(GrPlatform) #define LIB_SUFFIX
 set(GR_RUNTIME_DIR      bin)
 set(GR_LIBRARY_DIR      lib${LIB_SUFFIX})
-set(GR_INCLUDE_DIR      include/mods)
+set(GR_INCLUDE_DIR      include/blockstream)
 set(GR_DATA_DIR         share)
 set(GR_PKG_DATA_DIR     ${GR_DATA_DIR}/${CMAKE_PROJECT_NAME})
 set(GR_DOC_DIR          ${GR_DATA_DIR}/doc)
@@ -161,7 +161,7 @@ list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake/Modules)
 include(GrVersion)
 
 if(NOT CPPUNIT_FOUND)
-    message(FATAL_ERROR "CppUnit required to compile mods")
+    message(FATAL_ERROR "CppUnit required to compile blockstream")
 endif()
 
 ########################################################################
@@ -197,12 +197,12 @@ link_directories(
 )
 
 # Set component parameters
-set(GR_MODS_INCLUDE_DIRS
+set(GR_BLOCKSTREAM_INCLUDE_DIRS
 	${CMAKE_CURRENT_SOURCE_DIR}/include
 	${CMAKE_CURRENT_SOURCE_DIR}/include/Module
 	${CMAKE_CURRENT_SOURCE_DIR}/include/Tools
 	${CMAKE_CURRENT_SOURCE_DIR}/aff3ct/src CACHE INTERNAL "" FORCE)
-set(GR_MODS_SWIG_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/swig CACHE INTERNAL "" FORCE)
+set(GR_BLOCKSTREAM_SWIG_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/swig CACHE INTERNAL "" FORCE)
 
 ########################################################################
 # Create uninstall target
@@ -219,7 +219,7 @@ add_custom_target(uninstall
 ########################################################################
 # Add subdirectories
 ########################################################################
-add_subdirectory(include/mods)
+add_subdirectory(include/blockstream)
 add_subdirectory(include/Module)
 add_subdirectory(include/Tools)
 add_subdirectory(include/mipp)
@@ -237,6 +237,6 @@ if(NOT CMAKE_MODULES_DIR)
   set(CMAKE_MODULES_DIR lib${LIB_SUFFIX}/cmake)
 endif(NOT CMAKE_MODULES_DIR)
 
-install(FILES cmake/Modules/modsConfig.cmake
-    DESTINATION ${CMAKE_MODULES_DIR}/mods
+install(FILES cmake/Modules/blockstreamConfig.cmake
+    DESTINATION ${CMAKE_MODULES_DIR}/blockstream
 )
