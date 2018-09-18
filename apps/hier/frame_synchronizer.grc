@@ -14,7 +14,7 @@
     </param>
     <param>
       <key>category</key>
-      <value>Synchronizers</value>
+      <value>[Blockstream]/Synchronizers</value>
     </param>
     <param>
       <key>comment</key>
@@ -1138,7 +1138,7 @@ sum(abs(rx_sym).^2)</value>
     </param>
     <param>
       <key>label</key>
-      <value>PMF Peak Detection Threshold</value>
+      <value>Peak Detection Threshold</value>
     </param>
     <param>
       <key>short_id</key>

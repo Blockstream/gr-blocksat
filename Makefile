@@ -11,10 +11,14 @@ MOD_CC = $(shell find $(CC_PATH) -type f -name '*.cc')
 MOD_PY = $(shell find $(PY_PATH) -type f -name '*.py')
 MOD_H = $(shell find $(H_PATH) -type f -name '*.h')
 
+HIER_FILES = $(shell find apps/hier/ -type f -name '*.grc')
+HIER_PY_FILES = $(patsubst apps/hier/%.grc, python/%.py, $(HIER_FILES))
+HIER_RC = $(patsubst apps/hier/%.grc, apps/hier/%.build_record, $(HIER_FILES))
+
 BUILD_DIR = build
 BUILD_RC = build_record
 
-.PHONY: build install clean uninstall
+.PHONY: build install clean uninstall hier build-hier clean-hier
 
 build: $(BUILD_RC)
 
@@ -35,3 +39,24 @@ uninstall:
 	rm -f $(BUILD_RC)
 	$(MAKE) -C $(BUILD_DIR) uninstall
 
+# Re-build Hierarchical Blocks
+# NOTE: the hierarchical blocks are pre-built in the repository due to the fact
+# that the top-level Python modules that they generate have been
+# customized. They should only be re-built in case there is some
+# incompatibility. In this case, the customizations in the top-level Python need
+# to be restored. These are easily tracked by using "git diff".
+hier: clean-hier build-hier
+
+build-hier: $(HIER_RC)
+
+apps/hier/%.build_record: apps/hier/%.grc
+	grcc $<
+	mv $(HOME)/.grc_gnuradio/$(*F).py python/
+	mv $(HOME)/.grc_gnuradio/$(*F).py.xml grc/blockstream_$(*F).xml
+	$(warning Build of hier blocks discards required python customizations)
+	$(info Check the changes using git and restore the customizations)
+	touch apps/hier/$(*F).build_record
+
+clean-hier:
+	-rm $(HIER_PY_FILES)
+	-rm $(HIER_RC)

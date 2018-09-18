@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 ##################################################
 # GNU Radio Python Flow Graph
-# Title: Coarse Freq. Rec.
+# Title: Coarse Frequency Recovery
 # Description: FFT-Based Feedforward Coarse Carrier Frequency Recovery
-# Generated: Sat May 12 14:09:27 2018
+# Generated: Tue Sep 18 12:26:46 2018
 ##################################################
 
 from gnuradio import blocks
@@ -18,7 +18,7 @@ class ffw_coarse_freq_rec(gr.hier_block2):
 
     def __init__(self, abs_cfo_threshold=1e6, alpha=0.001, fft_len=512, fft_peak_threshold=0.5, rf_center_freq=1e9, samp_rate=32e3):
         gr.hier_block2.__init__(
-            self, "Coarse Freq. Rec.",
+            self, "Coarse Frequency Recovery",
             gr.io_signature(1, 1, gr.sizeof_gr_complex*1),
             gr.io_signaturev(2, 2, [gr.sizeof_float*fft_len, gr.sizeof_float*1]),
         )
@@ -36,10 +36,6 @@ class ffw_coarse_freq_rec(gr.hier_block2):
         ##################################################
         # Blocks
         ##################################################
-        self.blockstream_wrap_fft_index_0 = blockstream.wrap_fft_index(fft_len)
-        self.blockstream_runtime_cfo_ctrl_0 = blockstream.runtime_cfo_ctrl(7*int(1/alpha), abs_cfo_threshold, rf_center_freq)
-        self.blockstream_exponentiate_const_cci_0 = blockstream.exponentiate_const_cci(4, 1)
-        self.blockstream_argpeak_0 = blockstream.argpeak(fft_len, fft_peak_threshold)
         self.logpwrfft_x_0 = logpwrfft.logpwrfft_c(
         	sample_rate=samp_rate,
         	fft_size=fft_len,
@@ -48,6 +44,10 @@ class ffw_coarse_freq_rec(gr.hier_block2):
         	avg_alpha=alpha,
         	average=True,
         )
+        self.blockstream_wrap_fft_index_0 = blockstream.wrap_fft_index(fft_len)
+        self.blockstream_runtime_cfo_ctrl_0 = blockstream.runtime_cfo_ctrl(7*int(1/alpha), abs_cfo_threshold, int(rf_center_freq))
+        self.blockstream_exponentiate_const_cci_0 = blockstream.exponentiate_const_cci(4, 1)
+        self.blockstream_argpeak_0 = blockstream.argpeak(fft_len, fft_peak_threshold)
         self.blocks_sub_xx_0 = blocks.sub_ff(1)
         self.blocks_short_to_float_0 = blocks.short_to_float(1, 1)
         self.blocks_multiply_xx_0 = blocks.multiply_vff(1)
@@ -68,12 +68,12 @@ class ffw_coarse_freq_rec(gr.hier_block2):
         self.connect((self.blocks_short_to_float_0, 0), (self.blocks_multiply_const_vxx_2, 0))
         self.connect((self.blocks_sub_xx_0, 0), (self.blocks_multiply_xx_0, 0))
         self.connect((self.blocks_sub_xx_0, 0), (self.blocks_multiply_xx_0, 1))
-        self.connect((self.logpwrfft_x_0, 0), (self.blockstream_argpeak_0, 0))
-        self.connect((self.logpwrfft_x_0, 0), (self, 0))
         self.connect((self.blockstream_argpeak_0, 0), (self.blockstream_wrap_fft_index_0, 0))
         self.connect((self.blockstream_exponentiate_const_cci_0, 0), (self.logpwrfft_x_0, 0))
         self.connect((self.blockstream_runtime_cfo_ctrl_0, 0), (self, 1))
         self.connect((self.blockstream_wrap_fft_index_0, 0), (self.blocks_short_to_float_0, 0))
+        self.connect((self.logpwrfft_x_0, 0), (self.blockstream_argpeak_0, 0))
+        self.connect((self.logpwrfft_x_0, 0), (self, 0))
         self.connect((self, 0), (self.blockstream_exponentiate_const_cci_0, 0))
 
     def get_abs_cfo_threshold(self):
@@ -87,8 +87,8 @@ class ffw_coarse_freq_rec(gr.hier_block2):
 
     def set_alpha(self, alpha):
         self.alpha = alpha
-        self.blockstream_runtime_cfo_ctrl_0.set_avg_len(7*int(1/self.alpha))
         self.logpwrfft_x_0.set_avg_alpha(self.alpha)
+        self.blockstream_runtime_cfo_ctrl_0.set_avg_len(7*int(1/self.alpha))
         self.blocks_moving_average_xx_0_0.set_length_and_scale(int(1/self.alpha), 1.0/int(1/self.alpha))
         self.blocks_moving_average_xx_0.set_length_and_scale(int(1/self.alpha), 1.0/int(1/self.alpha))
 

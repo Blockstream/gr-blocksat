@@ -14,7 +14,7 @@
     </param>
     <param>
       <key>category</key>
-      <value>Synchronizers</value>
+      <value>[Blockstream]/Synchronizers</value>
     </param>
     <param>
       <key>comment</key>
@@ -78,7 +78,7 @@
     </param>
     <param>
       <key>title</key>
-      <value>Coarse Freq. Rec.</value>
+      <value>Coarse Frequency Recovery</value>
     </param>
   </block>
   <block>
@@ -1046,7 +1046,7 @@ negative frequencies</value>
     </param>
     <param>
       <key>label</key>
-      <value>RF Center Frequency</value>
+      <value>Starting RF Center Freq.</value>
     </param>
     <param>
       <key>short_id</key>

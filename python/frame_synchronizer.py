@@ -3,7 +3,7 @@
 # GNU Radio Python Flow Graph
 # Title: Frame Synchronizer
 # Description: Correlation-based frame synchronization
-# Generated: Thu Sep  7 13:50:39 2017
+# Generated: Tue Sep 18 12:26:43 2018
 ##################################################
 
 from gnuradio import blocks
@@ -40,11 +40,11 @@ class frame_synchronizer(gr.hier_block2):
         ##################################################
         # Blocks
         ##################################################
-        self.blockstream_frame_sync_fast_0 = blockstream.frame_sync_fast(pmf_peak_threshold, preamble_size, payload_size, equalize, fix_phase, M, fw_preamble, verbosity)
         self.interp_fir_filter_xxx_0_0 = filter.interp_fir_filter_fff(1, ( numpy.ones(preamble_size)))
         self.interp_fir_filter_xxx_0_0.declare_sample_delay(0)
         self.interp_fir_filter_xxx_0 = filter.interp_fir_filter_ccc(1, ( numpy.flipud(numpy.conj(preamble_syms))))
         self.interp_fir_filter_xxx_0.declare_sample_delay(0)
+        self.blockstream_frame_sync_fast_0 = blockstream.frame_sync_fast(pmf_peak_threshold, preamble_size, payload_size, equalize, fix_phase, M, fw_preamble, verbosity)
         self.blocks_multiply_xx_0 = blocks.multiply_vff(1)
         self.blocks_multiply_const_vxx_1_1 = blocks.multiply_const_vcc((1.0/sqrt(2), ))
         self.blocks_multiply_const_vxx_1 = blocks.multiply_const_vcc((1.0/(preamble_size*sqrt(2)), ))
@@ -64,15 +64,15 @@ class frame_synchronizer(gr.hier_block2):
         self.connect((self.blocks_multiply_const_vxx_1_1, 0), (self.blocks_complex_to_mag_1, 0))
         self.connect((self.blocks_multiply_xx_0, 0), (self.blockstream_frame_sync_fast_0, 1))
         self.connect((self.blocks_multiply_xx_0, 0), (self, 3))
-        self.connect((self.interp_fir_filter_xxx_0, 0), (self.blocks_multiply_const_vxx_1, 0))
-        self.connect((self.interp_fir_filter_xxx_0, 0), (self.blocks_multiply_const_vxx_1_1, 0))
-        self.connect((self.interp_fir_filter_xxx_0_0, 0), (self.blocks_divide_xx_1, 1))
         self.connect((self.blockstream_frame_sync_fast_0, 0), (self, 0))
         self.connect((self.blockstream_frame_sync_fast_0, 1), (self, 1))
         self.connect((self.blockstream_frame_sync_fast_0, 2), (self, 2))
+        self.connect((self.interp_fir_filter_xxx_0, 0), (self.blocks_multiply_const_vxx_1, 0))
+        self.connect((self.interp_fir_filter_xxx_0, 0), (self.blocks_multiply_const_vxx_1_1, 0))
+        self.connect((self.interp_fir_filter_xxx_0_0, 0), (self.blocks_divide_xx_1, 1))
         self.connect((self, 0), (self.blocks_complex_to_mag_squared_0, 0))
-        self.connect((self, 0), (self.interp_fir_filter_xxx_0, 0))
         self.connect((self, 0), (self.blockstream_frame_sync_fast_0, 0))
+        self.connect((self, 0), (self.interp_fir_filter_xxx_0, 0))
 
     def get_M(self):
         return self.M
