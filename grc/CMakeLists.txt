@@ -19,9 +19,7 @@
 
 install(FILES
     blockstream_frame_sync_fast.xml
-    blockstream_file_source_nonblock.xml
     blockstream_file_sink_nonblock.xml
-    blockstream_fifo_async_source.xml
     blockstream_fifo_async_sink.xml
     blockstream_turbo_decoder.xml
     blockstream_mer_measurement.xml
