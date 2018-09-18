@@ -34,14 +34,10 @@ list(APPEND blockstream_sources
     nco_cc_impl.cc
     runtime_cfo_ctrl_impl.cc
     turbo_decoder_impl.cc
-    turbo_encoder_impl.cc
     wrap_fft_index_impl.cc
     aff3ct/Decoder_NO.cpp
     aff3ct/Decoder_turbo.cpp
     aff3ct/Decoder_turbo_fast.cpp
-    aff3ct/Encoder_RSC_generic_sys.cpp
-    aff3ct/Encoder_RSC_sys.cpp
-    aff3ct/Encoder_turbo.cpp
     aff3ct/exception.cpp
     aff3ct/invalid_argument.cpp
     aff3ct/length_error.cpp

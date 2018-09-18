@@ -26,11 +26,6 @@ install(FILES
 	Decoder/RSC/BCJR/Seq/Decoder_RSC_BCJR_seq_very_fast.hpp
 	Decoder/Turbo/Decoder_turbo_fast.hpp
 	Decoder/Turbo/Decoder_turbo.hpp
-	Encoder/Encoder.hpp
-	Encoder/Encoder_sys.hpp
-	Encoder/RSC/Encoder_RSC_generic_sys.hpp
-	Encoder/RSC/Encoder_RSC_sys.hpp
-	Encoder/Turbo/Encoder_turbo.hpp
 	Interleaver/Interleaver.hpp
 	Interleaver/LTE/Interleaver_LTE.hpp
 	Module.hpp DESTINATION include/Module

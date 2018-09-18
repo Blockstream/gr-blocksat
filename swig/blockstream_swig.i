@@ -9,7 +9,6 @@
 
 %{
 #include "blockstream/frame_sync_fast.h"
-#include "blockstream/turbo_encoder.h"
 #include "blockstream/turbo_decoder.h"
 #include "blockstream/mer_measurement.h"
 #include "blockstream/da_carrier_phase_rec.h"
@@ -23,8 +22,6 @@
 
 %include "blockstream/frame_sync_fast.h"
 GR_SWIG_BLOCK_MAGIC2(blockstream, frame_sync_fast);
-%include "blockstream/turbo_encoder.h"
-GR_SWIG_BLOCK_MAGIC2(blockstream, turbo_encoder);
 %include "blockstream/turbo_decoder.h"
 GR_SWIG_BLOCK_MAGIC2(blockstream, turbo_decoder);
 %include "blockstream/mer_measurement.h"

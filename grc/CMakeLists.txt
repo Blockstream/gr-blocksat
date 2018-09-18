@@ -23,7 +23,6 @@ install(FILES
     blockstream_file_sink_nonblock.xml
     blockstream_fifo_async_source.xml
     blockstream_fifo_async_sink.xml
-    blockstream_turbo_encoder.xml
     blockstream_turbo_decoder.xml
     blockstream_mer_measurement.xml
     blockstream_da_carrier_phase_rec.xml
