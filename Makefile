@@ -32,8 +32,7 @@ install: $(BUILD_RC)
 
 clean:
 	rm -f $(BUILD_RC)
-	$(MAKE) -C $(BUILD_DIR) clean
-	rm -rf $(BUILD_DIR)
+	if [ -d $(BUILD_DIR) ]; then $(MAKE) -C $(BUILD_DIR) clean; fi
 
 uninstall:
 	rm -f $(BUILD_RC)
