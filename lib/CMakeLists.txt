@@ -35,6 +35,8 @@ list(APPEND blockstream_sources
     runtime_cfo_ctrl_impl.cc
     turbo_decoder_impl.cc
     wrap_fft_index_impl.cc
+    aff3ct/Encoder_RSC_generic_sys.cpp
+    aff3ct/Encoder_RSC_sys.cpp
     aff3ct/Decoder_NO.cpp
     aff3ct/Decoder_turbo.cpp
     aff3ct/Decoder_turbo_fast.cpp
