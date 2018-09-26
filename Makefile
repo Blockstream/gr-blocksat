@@ -29,6 +29,7 @@ $(BUILD_RC): $(MOD_CC) $(MOD_I_H) $(MOD_H) $(MOD_XML) $(MOD_PY)
 
 install: $(BUILD_RC)
 	cd $(BUILD_DIR) && make DESTDIR=$(DESTDIR) install
+	-ldconfig
 
 clean:
 	rm -f $(BUILD_RC)
