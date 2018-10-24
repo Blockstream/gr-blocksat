@@ -11,7 +11,7 @@ from gnuradio import gr
 from gnuradio.fft import logpwrfft
 from gnuradio.filter import firdes
 from math import *
-import blockstream
+import blocksat
 
 
 class ffw_coarse_freq_rec(gr.hier_block2):
@@ -44,10 +44,10 @@ class ffw_coarse_freq_rec(gr.hier_block2):
         	avg_alpha=alpha,
         	average=True,
         )
-        self.blockstream_wrap_fft_index_0 = blockstream.wrap_fft_index(fft_len)
-        self.blockstream_runtime_cfo_ctrl_0 = blockstream.runtime_cfo_ctrl(7*int(1/alpha), abs_cfo_threshold, int(rf_center_freq))
-        self.blockstream_exponentiate_const_cci_0 = blockstream.exponentiate_const_cci(4, 1)
-        self.blockstream_argpeak_0 = blockstream.argpeak(fft_len, fft_peak_threshold)
+        self.blocksat_wrap_fft_index_0 = blocksat.wrap_fft_index(fft_len)
+        self.blocksat_runtime_cfo_ctrl_0 = blocksat.runtime_cfo_ctrl(7*int(1/alpha), abs_cfo_threshold, int(rf_center_freq))
+        self.blocksat_exponentiate_const_cci_0 = blocksat.exponentiate_const_cci(4, 1)
+        self.blocksat_argpeak_0 = blocksat.argpeak(fft_len, fft_peak_threshold)
         self.blocks_sub_xx_0 = blocks.sub_ff(1)
         self.blocks_short_to_float_0 = blocks.short_to_float(1, 1)
         self.blocks_multiply_xx_0 = blocks.multiply_vff(1)
@@ -59,22 +59,22 @@ class ffw_coarse_freq_rec(gr.hier_block2):
         # Connections
         ##################################################
         self.connect((self.blocks_moving_average_xx_0, 0), (self.blocks_sub_xx_0, 1))
-        self.connect((self.blocks_moving_average_xx_0, 0), (self.blockstream_runtime_cfo_ctrl_0, 1))
-        self.connect((self.blocks_moving_average_xx_0_0, 0), (self.blockstream_runtime_cfo_ctrl_0, 2))
+        self.connect((self.blocks_moving_average_xx_0, 0), (self.blocksat_runtime_cfo_ctrl_0, 1))
+        self.connect((self.blocks_moving_average_xx_0_0, 0), (self.blocksat_runtime_cfo_ctrl_0, 2))
         self.connect((self.blocks_multiply_const_vxx_2, 0), (self.blocks_moving_average_xx_0, 0))
         self.connect((self.blocks_multiply_const_vxx_2, 0), (self.blocks_sub_xx_0, 0))
-        self.connect((self.blocks_multiply_const_vxx_2, 0), (self.blockstream_runtime_cfo_ctrl_0, 0))
+        self.connect((self.blocks_multiply_const_vxx_2, 0), (self.blocksat_runtime_cfo_ctrl_0, 0))
         self.connect((self.blocks_multiply_xx_0, 0), (self.blocks_moving_average_xx_0_0, 0))
         self.connect((self.blocks_short_to_float_0, 0), (self.blocks_multiply_const_vxx_2, 0))
         self.connect((self.blocks_sub_xx_0, 0), (self.blocks_multiply_xx_0, 0))
         self.connect((self.blocks_sub_xx_0, 0), (self.blocks_multiply_xx_0, 1))
-        self.connect((self.blockstream_argpeak_0, 0), (self.blockstream_wrap_fft_index_0, 0))
-        self.connect((self.blockstream_exponentiate_const_cci_0, 0), (self.logpwrfft_x_0, 0))
-        self.connect((self.blockstream_runtime_cfo_ctrl_0, 0), (self, 1))
-        self.connect((self.blockstream_wrap_fft_index_0, 0), (self.blocks_short_to_float_0, 0))
-        self.connect((self.logpwrfft_x_0, 0), (self.blockstream_argpeak_0, 0))
+        self.connect((self.blocksat_argpeak_0, 0), (self.blocksat_wrap_fft_index_0, 0))
+        self.connect((self.blocksat_exponentiate_const_cci_0, 0), (self.logpwrfft_x_0, 0))
+        self.connect((self.blocksat_runtime_cfo_ctrl_0, 0), (self, 1))
+        self.connect((self.blocksat_wrap_fft_index_0, 0), (self.blocks_short_to_float_0, 0))
+        self.connect((self.logpwrfft_x_0, 0), (self.blocksat_argpeak_0, 0))
         self.connect((self.logpwrfft_x_0, 0), (self, 0))
-        self.connect((self, 0), (self.blockstream_exponentiate_const_cci_0, 0))
+        self.connect((self, 0), (self.blocksat_exponentiate_const_cci_0, 0))
 
     def get_abs_cfo_threshold(self):
         return self.abs_cfo_threshold
@@ -88,7 +88,7 @@ class ffw_coarse_freq_rec(gr.hier_block2):
     def set_alpha(self, alpha):
         self.alpha = alpha
         self.logpwrfft_x_0.set_avg_alpha(self.alpha)
-        self.blockstream_runtime_cfo_ctrl_0.set_avg_len(7*int(1/self.alpha))
+        self.blocksat_runtime_cfo_ctrl_0.set_avg_len(7*int(1/self.alpha))
         self.blocks_moving_average_xx_0_0.set_length_and_scale(int(1/self.alpha), 1.0/int(1/self.alpha))
         self.blocks_moving_average_xx_0.set_length_and_scale(int(1/self.alpha), 1.0/int(1/self.alpha))
 
@@ -115,15 +115,15 @@ class ffw_coarse_freq_rec(gr.hier_block2):
 
     # Runtime CFO Controller API
     def get_cfo_estimate(self):
-        return self.blockstream_runtime_cfo_ctrl_0.get_cfo_estimate()
+        return self.blocksat_runtime_cfo_ctrl_0.get_cfo_estimate()
 
     def get_rf_center_freq(self):
-        return self.blockstream_runtime_cfo_ctrl_0.get_rf_center_freq()
+        return self.blocksat_runtime_cfo_ctrl_0.get_rf_center_freq()
 
     def set_rf_center_freq(self, freq):
-        self.blockstream_runtime_cfo_ctrl_0.set_rf_center_freq(freq)
+        self.blocksat_runtime_cfo_ctrl_0.set_rf_center_freq(freq)
         self.rf_center_freq = freq
 
     def get_cfo_est_state(self):
-        return self.blockstream_runtime_cfo_ctrl_0.get_cfo_est_state()
+        return self.blocksat_runtime_cfo_ctrl_0.get_cfo_est_state()
 

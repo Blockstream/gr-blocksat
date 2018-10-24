@@ -28,7 +28,7 @@
 #include "argpeak_impl.h"
 
 namespace gr {
-  namespace blockstream {
+  namespace blocksat {
 
     argpeak::sptr
     argpeak::make(size_t vlen, float max_thresh)
@@ -109,5 +109,5 @@ namespace gr {
       return noutput_items;
     }
 
-  } /* namespace blockstream */
+  } /* namespace blocksat */
 } /* namespace gr */

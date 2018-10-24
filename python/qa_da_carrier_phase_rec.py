@@ -21,7 +21,7 @@
 
 from gnuradio import gr, gr_unittest
 from gnuradio import blocks
-import blockstream_swig as blockstream
+import blocksat_swig as blocksat
 
 class qa_da_carrier_phase_rec (gr_unittest.TestCase):
 

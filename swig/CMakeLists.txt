@@ -20,10 +20,10 @@
 ########################################################################
 # Check if there is C++ code at all
 ########################################################################
-if(NOT blockstream_sources)
+if(NOT blocksat_sources)
 	MESSAGE(STATUS "No C++ sources... skipping swig/")
 	return()
-endif(NOT blockstream_sources)
+endif(NOT blocksat_sources)
 
 ########################################################################
 # Include swig generation macros
@@ -43,23 +43,23 @@ foreach(incdir ${GNURADIO_RUNTIME_INCLUDE_DIRS})
     list(APPEND GR_SWIG_INCLUDE_DIRS ${incdir}/gnuradio/swig)
 endforeach(incdir)
 
-set(GR_SWIG_LIBRARIES gnuradio-blockstream)
-set(GR_SWIG_DOC_FILE ${CMAKE_CURRENT_BINARY_DIR}/blockstream_swig_doc.i)
+set(GR_SWIG_LIBRARIES gnuradio-blocksat)
+set(GR_SWIG_DOC_FILE ${CMAKE_CURRENT_BINARY_DIR}/blocksat_swig_doc.i)
 set(GR_SWIG_DOC_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../include)
 
-GR_SWIG_MAKE(blockstream_swig blockstream_swig.i)
+GR_SWIG_MAKE(blocksat_swig blocksat_swig.i)
 
 ########################################################################
 # Install the build swig module
 ########################################################################
-GR_SWIG_INSTALL(TARGETS blockstream_swig DESTINATION ${GR_PYTHON_DIR}/blockstream)
+GR_SWIG_INSTALL(TARGETS blocksat_swig DESTINATION ${GR_PYTHON_DIR}/blocksat)
 
 ########################################################################
 # Install swig .i files for development
 ########################################################################
 install(
     FILES
-    blockstream_swig.i
-    ${CMAKE_CURRENT_BINARY_DIR}/blockstream_swig_doc.i
-    DESTINATION ${GR_INCLUDE_DIR}/blockstream/swig
+    blocksat_swig.i
+    ${CMAKE_CURRENT_BINARY_DIR}/blocksat_swig_doc.i
+    DESTINATION ${GR_INCLUDE_DIR}/blocksat/swig
 )

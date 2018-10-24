@@ -29,7 +29,7 @@
 #define M_TWOPI (2*M_PI)
 
 namespace gr {
-  namespace blockstream {
+  namespace blocksat {
 
     nco_cc::sptr
     nco_cc::make(float samp_rate, float freq, int n_steps)
@@ -165,5 +165,5 @@ namespace gr {
       return noutput_items;
     }
 
-  } /* namespace blockstream */
+  } /* namespace blocksat */
 } /* namespace gr */

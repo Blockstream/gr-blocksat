@@ -18,13 +18,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef INCLUDED_BLOCKSTREAM_MER_MEASUREMENT_IMPL_H
-#define INCLUDED_BLOCKSTREAM_MER_MEASUREMENT_IMPL_H
+#ifndef INCLUDED_BLOCKSAT_MER_MEASUREMENT_IMPL_H
+#define INCLUDED_BLOCKSAT_MER_MEASUREMENT_IMPL_H
 
-#include <blockstream/mer_measurement.h>
+#include <blocksat/mer_measurement.h>
 
 namespace gr {
-  namespace blockstream {
+  namespace blocksat {
 
     class mer_measurement_impl : public mer_measurement
     {
@@ -50,7 +50,7 @@ namespace gr {
       float get_snr();
     };
 
-  } // namespace blockstream
+  } // namespace blocksat
 } // namespace gr
 
-#endif /* INCLUDED_BLOCKSTREAM_MER_MEASUREMENT_IMPL_H */
+#endif /* INCLUDED_BLOCKSAT_MER_MEASUREMENT_IMPL_H */

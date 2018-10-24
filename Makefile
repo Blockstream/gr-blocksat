@@ -3,7 +3,7 @@ SHELL:=/bin/bash
 XML_PATH = grc
 LIB_PATH = lib
 PY_PATH = python
-H_PATH = include/blockstream
+H_PATH = include/blocksat
 
 MOD_XML = $(shell find $(XML_PATH) -type f -name '*.xml')
 MOD_I_H = $(shell find $(LIB_PATH) -type f -name '*.h')
@@ -53,7 +53,7 @@ build-hier: $(HIER_RC)
 apps/hier/%.build_record: apps/hier/%.grc
 	grcc $<
 	mv $(HOME)/.grc_gnuradio/$(*F).py python/
-	mv $(HOME)/.grc_gnuradio/$(*F).py.xml grc/blockstream_$(*F).xml
+	mv $(HOME)/.grc_gnuradio/$(*F).py.xml grc/blocksat_$(*F).xml
 	$(warning Build of hier blocks discards required python customizations)
 	$(info Check the changes using git and restore the customizations)
 	touch apps/hier/$(*F).build_record

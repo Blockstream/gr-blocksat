@@ -22,7 +22,7 @@
 from gnuradio import gr, gr_unittest, digital
 from gnuradio import blocks
 from numpy import array
-import blockstream_swig as blockstream
+import blocksat_swig as blocksat
 
 class qa_turbo_decoder (gr_unittest.TestCase):
 
@@ -40,9 +40,9 @@ class qa_turbo_decoder (gr_unittest.TestCase):
         in_vec = [i%2 for i in range(K)]
         # set up fg
         src = blocks.vector_source_b(in_vec)
-        enc = blockstream.turbo_encoder(N, K);
+        enc = blocksat.turbo_encoder(N, K);
         mapb = digital.map_bb([1,-1]);
-        dec = blockstream.turbo_decoder(N, K);
+        dec = blocksat.turbo_decoder(N, K);
         snk = blocks.vector_sink_b()
         self.tb.connect (src, enc, mapb, dec, snk)
         self.tb.run ()

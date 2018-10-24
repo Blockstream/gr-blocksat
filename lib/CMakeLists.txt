@@ -25,7 +25,7 @@ include(GrPlatform) #define LIB_SUFFIX
 include_directories(${Boost_INCLUDE_DIR})
 link_directories(${Boost_LIBRARY_DIRS})
 
-list(APPEND blockstream_sources
+list(APPEND blocksat_sources
     argpeak_impl.cc
     da_carrier_phase_rec_impl.cc
     exponentiate_const_cci_impl.cc
@@ -54,19 +54,19 @@ list(APPEND blockstream_sources
 #		Encoder_user.cpp
 #		Factory.cpp
 
-set(blockstream_sources "${blockstream_sources}" PARENT_SCOPE)
-if(NOT blockstream_sources)
+set(blocksat_sources "${blocksat_sources}" PARENT_SCOPE)
+if(NOT blocksat_sources)
 	MESSAGE(STATUS "No C++ sources... skipping lib/")
 	return()
-endif(NOT blockstream_sources)
+endif(NOT blocksat_sources)
 
-add_library(gnuradio-blockstream SHARED ${blockstream_sources})
-target_link_libraries(gnuradio-blockstream ${Boost_LIBRARIES} ${GNURADIO_ALL_LIBRARIES})
-set_target_properties(gnuradio-blockstream PROPERTIES DEFINE_SYMBOL "gnuradio_blockstream_EXPORTS")
-set_target_properties(gnuradio-blockstream PROPERTIES DEFINE_SYMBOL "MULTI_PREC")
+add_library(gnuradio-blocksat SHARED ${blocksat_sources})
+target_link_libraries(gnuradio-blocksat ${Boost_LIBRARIES} ${GNURADIO_ALL_LIBRARIES})
+set_target_properties(gnuradio-blocksat PROPERTIES DEFINE_SYMBOL "gnuradio_blocksat_EXPORTS")
+set_target_properties(gnuradio-blocksat PROPERTIES DEFINE_SYMBOL "MULTI_PREC")
 
 if(APPLE)
-    set_target_properties(gnuradio-blockstream PROPERTIES
+    set_target_properties(gnuradio-blocksat PROPERTIES
         INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib"
     )
 endif(APPLE)
@@ -75,7 +75,7 @@ endif(APPLE)
 # Install built library files
 ########################################################################
 include(GrMiscUtils)
-GR_LIBRARY_FOO(gnuradio-blockstream RUNTIME_COMPONENT "blockstream_runtime" DEVEL_COMPONENT "blockstream_devel")
+GR_LIBRARY_FOO(gnuradio-blocksat RUNTIME_COMPONENT "blocksat_runtime" DEVEL_COMPONENT "blocksat_devel")
 
 ########################################################################
 # Build and register unit test
@@ -84,22 +84,22 @@ include(GrTest)
 
 include_directories(${CPPUNIT_INCLUDE_DIRS})
 
-list(APPEND test_blockstream_sources
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_blockstream.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/qa_blockstream.cc
+list(APPEND test_blocksat_sources
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_blocksat.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/qa_blocksat.cc
 )
 
-add_executable(test-blockstream ${test_blockstream_sources})
+add_executable(test-blocksat ${test_blocksat_sources})
 
 target_link_libraries(
-  test-blockstream
+  test-blocksat
   ${GNURADIO_RUNTIME_LIBRARIES}
   ${Boost_LIBRARIES}
   ${CPPUNIT_LIBRARIES}
-  gnuradio-blockstream
+  gnuradio-blocksat
 )
 
-GR_ADD_TEST(test_blockstream test-blockstream)
+GR_ADD_TEST(test_blocksat test-blocksat)
 
 ########################################################################
 # Print summary

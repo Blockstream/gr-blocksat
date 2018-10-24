@@ -18,19 +18,19 @@
 # Boston, MA 02110-1301, USA.
 
 install(FILES
-    blockstream_frame_sync_fast.xml
-    blockstream_file_sink_nonblock.xml
-    blockstream_fifo_async_sink.xml
-    blockstream_turbo_decoder.xml
-    blockstream_mer_measurement.xml
-    blockstream_da_carrier_phase_rec.xml
-    blockstream_nco_cc.xml
-    blockstream_ffw_coarse_freq_rec.xml
-    blockstream_wrap_fft_index.xml
-    blockstream_frame_synchronizer.xml
-    blockstream_exponentiate_const_cci.xml
-    blockstream_runtime_cfo_ctrl.xml
-    blockstream_variable_tuning_control.xml
-    blockstream_variable_rx_logger.xml
-    blockstream_argpeak.xml DESTINATION share/gnuradio/grc/blocks
+    blocksat_frame_sync_fast.xml
+    blocksat_file_sink_nonblock.xml
+    blocksat_fifo_async_sink.xml
+    blocksat_turbo_decoder.xml
+    blocksat_mer_measurement.xml
+    blocksat_da_carrier_phase_rec.xml
+    blocksat_nco_cc.xml
+    blocksat_ffw_coarse_freq_rec.xml
+    blocksat_wrap_fft_index.xml
+    blocksat_frame_synchronizer.xml
+    blocksat_exponentiate_const_cci.xml
+    blocksat_runtime_cfo_ctrl.xml
+    blocksat_variable_tuning_control.xml
+    blocksat_variable_rx_logger.xml
+    blocksat_argpeak.xml DESTINATION share/gnuradio/grc/blocks
 )

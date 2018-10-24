@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<block>
+  <name>Non-blocking File Sink</name>
+  <key>blocksat_file_sink_nonblock</key>
+  <category>[Blockstream Satellite]/File Operators</category>
+  <import>import blocksat</import>
+  <make>blocksat.file_sink_nonblock($file_name)</make>
+  <param>
+    <name>Pipe Name</name>
+    <key>file_name</key>
+    <type>string</type>
+  </param>
+  <sink>
+    <name>in</name>
+    <type>byte</type>
+  </sink>
+</block>

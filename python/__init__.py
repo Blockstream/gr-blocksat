@@ -19,14 +19,14 @@
 # The presence of this file turns this directory into a Python package
 
 '''
-This is the GNU Radio BLOCKSTREAM module. Place your Python package
+This is the GNU Radio BLOCKSAT module. Place your Python package
 description here (python/__init__.py).
 '''
 
-# import swig generated symbols into the blockstream namespace
+# import swig generated symbols into the blocksat namespace
 try:
 	# this might fail if the module is python-only
-	from blockstream_swig import *
+	from blocksat_swig import *
 except ImportError:
 	pass
 

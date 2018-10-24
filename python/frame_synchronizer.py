@@ -11,7 +11,7 @@ from gnuradio import filter
 from gnuradio import gr
 from gnuradio.filter import firdes
 from math import *
-import blockstream
+import blocksat
 import numpy
 
 
@@ -44,7 +44,7 @@ class frame_synchronizer(gr.hier_block2):
         self.interp_fir_filter_xxx_0_0.declare_sample_delay(0)
         self.interp_fir_filter_xxx_0 = filter.interp_fir_filter_ccc(1, ( numpy.flipud(numpy.conj(preamble_syms))))
         self.interp_fir_filter_xxx_0.declare_sample_delay(0)
-        self.blockstream_frame_sync_fast_0 = blockstream.frame_sync_fast(pmf_peak_threshold, preamble_size, payload_size, equalize, fix_phase, M, fw_preamble, verbosity)
+        self.blocksat_frame_sync_fast_0 = blocksat.frame_sync_fast(pmf_peak_threshold, preamble_size, payload_size, equalize, fix_phase, M, fw_preamble, verbosity)
         self.blocks_multiply_xx_0 = blocks.multiply_vff(1)
         self.blocks_multiply_const_vxx_1_1 = blocks.multiply_const_vcc((1.0/sqrt(2), ))
         self.blocks_multiply_const_vxx_1 = blocks.multiply_const_vcc((1.0/(preamble_size*sqrt(2)), ))
@@ -59,19 +59,19 @@ class frame_synchronizer(gr.hier_block2):
         self.connect((self.blocks_complex_to_mag_squared_0, 0), (self.interp_fir_filter_xxx_0_0, 0))
         self.connect((self.blocks_divide_xx_1, 0), (self.blocks_multiply_xx_0, 0))
         self.connect((self.blocks_divide_xx_1, 0), (self.blocks_multiply_xx_0, 1))
-        self.connect((self.blocks_multiply_const_vxx_1, 0), (self.blockstream_frame_sync_fast_0, 2))
+        self.connect((self.blocks_multiply_const_vxx_1, 0), (self.blocksat_frame_sync_fast_0, 2))
         self.connect((self.blocks_multiply_const_vxx_1, 0), (self, 4))
         self.connect((self.blocks_multiply_const_vxx_1_1, 0), (self.blocks_complex_to_mag_1, 0))
-        self.connect((self.blocks_multiply_xx_0, 0), (self.blockstream_frame_sync_fast_0, 1))
+        self.connect((self.blocks_multiply_xx_0, 0), (self.blocksat_frame_sync_fast_0, 1))
         self.connect((self.blocks_multiply_xx_0, 0), (self, 3))
-        self.connect((self.blockstream_frame_sync_fast_0, 0), (self, 0))
-        self.connect((self.blockstream_frame_sync_fast_0, 1), (self, 1))
-        self.connect((self.blockstream_frame_sync_fast_0, 2), (self, 2))
+        self.connect((self.blocksat_frame_sync_fast_0, 0), (self, 0))
+        self.connect((self.blocksat_frame_sync_fast_0, 1), (self, 1))
+        self.connect((self.blocksat_frame_sync_fast_0, 2), (self, 2))
         self.connect((self.interp_fir_filter_xxx_0, 0), (self.blocks_multiply_const_vxx_1, 0))
         self.connect((self.interp_fir_filter_xxx_0, 0), (self.blocks_multiply_const_vxx_1_1, 0))
         self.connect((self.interp_fir_filter_xxx_0_0, 0), (self.blocks_divide_xx_1, 1))
         self.connect((self, 0), (self.blocks_complex_to_mag_squared_0, 0))
-        self.connect((self, 0), (self.blockstream_frame_sync_fast_0, 0))
+        self.connect((self, 0), (self.blocksat_frame_sync_fast_0, 0))
         self.connect((self, 0), (self.interp_fir_filter_xxx_0, 0))
 
     def get_M(self):
@@ -132,8 +132,8 @@ class frame_synchronizer(gr.hier_block2):
         self.verbosity = verbosity
 
     def get_state(self):
-        return self.blockstream_frame_sync_fast_0.get_state()
+        return self.blocksat_frame_sync_fast_0.get_state()
 
     def get_timing_rec_indicator(self):
-        return self.blockstream_frame_sync_fast_0.get_timing_rec_indicator()
+        return self.blocksat_frame_sync_fast_0.get_timing_rec_indicator()
 

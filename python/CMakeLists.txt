@@ -36,7 +36,7 @@ GR_PYTHON_INSTALL(
     file_sink_nonblock.py
     tuning_control.py
     fifo_async_sink.py
-    rx_logger.py DESTINATION ${GR_PYTHON_DIR}/blockstream
+    rx_logger.py DESTINATION ${GR_PYTHON_DIR}/blocksat
 )
 
 ########################################################################
@@ -44,7 +44,7 @@ GR_PYTHON_INSTALL(
 ########################################################################
 include(GrTest)
 
-set(GR_TEST_TARGET_DEPS gnuradio-blockstream)
+set(GR_TEST_TARGET_DEPS gnuradio-blocksat)
 set(GR_TEST_PYTHON_DIRS ${CMAKE_BINARY_DIR}/swig)
 GR_ADD_TEST(qa_frame_sync_fast ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_frame_sync_fast.py)
 GR_ADD_TEST(qa_file_sink_nonblock ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_file_sink_nonblock.py)

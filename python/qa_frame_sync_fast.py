@@ -21,7 +21,7 @@
 
 from gnuradio import gr, gr_unittest
 from gnuradio import blocks
-import blockstream_swig as blockstream
+import blocksat_swig as blocksat
 
 class qa_frame_sync_fast (gr_unittest.TestCase):
 
@@ -83,7 +83,7 @@ class qa_frame_sync_fast (gr_unittest.TestCase):
         payload_len = 5
         n_init_peaks = 0
         equalize = 0
-        frame_synchronizer = blockstream.frame_sync_fast (threshold, barker_len, barker_rep, payload_len, n_init_peaks, equalize)
+        frame_synchronizer = blocksat.frame_sync_fast (threshold, barker_len, barker_rep, payload_len, n_init_peaks, equalize)
         peak_snk = blocks.vector_sink_b ()
         sym_snk = blocks.vector_sink_c ()
         self.tb.connect (sym_src, (frame_synchronizer, 0))

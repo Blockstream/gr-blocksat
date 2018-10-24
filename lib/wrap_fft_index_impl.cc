@@ -26,7 +26,7 @@
 #include "wrap_fft_index_impl.h"
 
 namespace gr {
-  namespace blockstream {
+  namespace blocksat {
 
     wrap_fft_index::sptr
     wrap_fft_index::make(int fft_size)
@@ -74,5 +74,5 @@ namespace gr {
       return noutput_items;
     }
 
-  } /* namespace blockstream */
+  } /* namespace blocksat */
 } /* namespace gr */

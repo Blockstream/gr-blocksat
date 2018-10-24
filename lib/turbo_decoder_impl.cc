@@ -28,7 +28,7 @@
 #undef _DEBUG
 
 namespace gr {
-  namespace blockstream {
+  namespace blocksat {
 
     turbo_decoder::sptr
     turbo_decoder::make(int N, int K)
@@ -143,6 +143,6 @@ namespace gr {
       return noutput_items;
     }
 
-  } /* namespace blockstream */
+  } /* namespace blocksat */
 } /* namespace gr */
 

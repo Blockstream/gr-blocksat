@@ -1,4 +1,4 @@
-# gr-blockstream
+# gr-blocksat
 
 GNU Radio Blockstream Satellite Receiver Module
 
@@ -18,9 +18,9 @@ information, please visit
 
 In the
 [blockstream/satellite](https://github.com/Blockstream/satellite)
-repo, this project (`gr-blockstream`) is taken as a submodule and
+repo, this project (`gr-blocksat`) is taken as a submodule and
 built/installed from there directly. However, in case you want to
-build and install `gr-blockstream` separately, you can run:
+build and install `gr-blocksat` separately, you can run:
 
 ```
 $ make

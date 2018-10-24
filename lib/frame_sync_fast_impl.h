@@ -18,13 +18,13 @@
 * Boston, MA 02110-1301, USA.
 */
 
-#ifndef INCLUDED_BLOCKSTREAM_FRAME_SYNC_FAST_IMPL_H
-#define INCLUDED_BLOCKSTREAM_FRAME_SYNC_FAST_IMPL_H
+#ifndef INCLUDED_BLOCKSAT_FRAME_SYNC_FAST_IMPL_H
+#define INCLUDED_BLOCKSAT_FRAME_SYNC_FAST_IMPL_H
 
-#include <blockstream/frame_sync_fast.h>
+#include <blocksat/frame_sync_fast.h>
 
 namespace gr {
-  namespace blockstream {
+  namespace blocksat {
 
     class frame_sync_fast_impl : public frame_sync_fast
     {
@@ -91,7 +91,7 @@ namespace gr {
         gr_vector_void_star &output_items);
 
       };
-    } // namespace blockstream
+    } // namespace blocksat
   } // namespace gr
 
-  #endif /* INCLUDED_BLOCKSTREAM_FRAME_SYNC_FAST_IMPL_H */
+  #endif /* INCLUDED_BLOCKSAT_FRAME_SYNC_FAST_IMPL_H */

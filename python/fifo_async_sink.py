@@ -20,7 +20,7 @@
 # 
 
 from gnuradio import gr, blocks
-import blockstream
+import blocksat
 
 class fifo_async_sink(gr.hier_block2):
     """
@@ -38,11 +38,11 @@ class fifo_async_sink(gr.hier_block2):
         # Blocks
         ##################################################
         self.blocks_pdu_to_tagged_stream_0 = blocks.pdu_to_tagged_stream(blocks.byte_t, 'packet_len')
-        self.blockstream_file_sink_nonblock_0 = blockstream.file_sink_nonblock(fifo_file)
+        self.blocksat_file_sink_nonblock_0 = blocksat.file_sink_nonblock(fifo_file)
 
         ##################################################
         # Connections
         ##################################################
         self.msg_connect((self,'async_pdu'), (self.blocks_pdu_to_tagged_stream_0, 'pdus'))    
-        self.connect((self.blocks_pdu_to_tagged_stream_0, 0), (self.blockstream_file_sink_nonblock_0, 0))    
+        self.connect((self.blocks_pdu_to_tagged_stream_0, 0), (self.blocksat_file_sink_nonblock_0, 0))    
 

@@ -50,13 +50,13 @@
 *
 */
 
-#ifndef INCLUDED_BLOCKSTREAM_DA_CARRIER_PHASE_REC_IMPL_H
-#define INCLUDED_BLOCKSTREAM_DA_CARRIER_PHASE_REC_IMPL_H
+#ifndef INCLUDED_BLOCKSAT_DA_CARRIER_PHASE_REC_IMPL_H
+#define INCLUDED_BLOCKSAT_DA_CARRIER_PHASE_REC_IMPL_H
 
-#include <blockstream/da_carrier_phase_rec.h>
+#include <blocksat/da_carrier_phase_rec.h>
 
 namespace gr {
-  namespace blockstream {
+  namespace blocksat {
 
     class da_carrier_phase_rec_impl : public da_carrier_phase_rec
     {
@@ -90,7 +90,7 @@ namespace gr {
       float set_K2(float zeta, float Bn_Ts);
     };
 
-  } // namespace blockstream
+  } // namespace blocksat
 } // namespace gr
 
-#endif /* INCLUDED_BLOCKSTREAM_DA_CARRIER_PHASE_REC_IMPL_H */
+#endif /* INCLUDED_BLOCKSAT_DA_CARRIER_PHASE_REC_IMPL_H */

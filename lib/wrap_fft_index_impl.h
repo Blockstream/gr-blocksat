@@ -18,13 +18,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef INCLUDED_BLOCKSTREAM_WRAP_FFT_INDEX_IMPL_H
-#define INCLUDED_BLOCKSTREAM_WRAP_FFT_INDEX_IMPL_H
+#ifndef INCLUDED_BLOCKSAT_WRAP_FFT_INDEX_IMPL_H
+#define INCLUDED_BLOCKSAT_WRAP_FFT_INDEX_IMPL_H
 
-#include <blockstream/wrap_fft_index.h>
+#include <blocksat/wrap_fft_index.h>
 
 namespace gr {
-  namespace blockstream {
+  namespace blocksat {
 
     class wrap_fft_index_impl : public wrap_fft_index
     {
@@ -41,7 +41,7 @@ namespace gr {
          gr_vector_void_star &output_items);
     };
 
-  } // namespace blockstream
+  } // namespace blocksat
 } // namespace gr
 
-#endif /* INCLUDED_BLOCKSTREAM_WRAP_FFT_INDEX_IMPL_H */
+#endif /* INCLUDED_BLOCKSAT_WRAP_FFT_INDEX_IMPL_H */

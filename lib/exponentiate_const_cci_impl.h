@@ -20,13 +20,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef INCLUDED_BLOCKSTREAM_EXPONENTIATE_CONST_CCI_IMPL_H
-#define INCLUDED_BLOCKSTREAM_EXPONENTIATE_CONST_CCI_IMPL_H
+#ifndef INCLUDED_BLOCKSAT_EXPONENTIATE_CONST_CCI_IMPL_H
+#define INCLUDED_BLOCKSAT_EXPONENTIATE_CONST_CCI_IMPL_H
 
-#include <blockstream/exponentiate_const_cci.h>
+#include <blocksat/exponentiate_const_cci.h>
 
 namespace gr {
-  namespace blockstream {
+  namespace blocksat {
 
     class exponentiate_const_cci_impl : public exponentiate_const_cci
     {
@@ -46,7 +46,7 @@ namespace gr {
          gr_vector_void_star &output_items);
     };
 
-  } // namespace blockstream
+  } // namespace blocksat
 } // namespace gr
 
-#endif /* INCLUDED_BLOCKSTREAM_EXPONENTIATE_CONST_CCI_IMPL_H */
+#endif /* INCLUDED_BLOCKSAT_EXPONENTIATE_CONST_CCI_IMPL_H */

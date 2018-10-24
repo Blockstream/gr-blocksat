@@ -28,7 +28,7 @@
 #include "da_carrier_phase_rec_impl.h"
 
 namespace gr {
-  namespace blockstream {
+  namespace blocksat {
 
     da_carrier_phase_rec::sptr
     da_carrier_phase_rec::make(const std::vector<gr_complex> &preamble_syms, float noise_bw, float damp_factor, int M, bool data_aided, bool reset_per_frame)
@@ -302,5 +302,5 @@ namespace gr {
       }
     }
 
-  } /* namespace blockstream */
+  } /* namespace blocksat */
 } /* namespace gr */

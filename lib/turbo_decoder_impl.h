@@ -18,10 +18,10 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef INCLUDED_BLOCKSTREAM_TURBO_DECODER_IMPL_H
-#define INCLUDED_BLOCKSTREAM_TURBO_DECODER_IMPL_H
+#ifndef INCLUDED_BLOCKSAT_TURBO_DECODER_IMPL_H
+#define INCLUDED_BLOCKSAT_TURBO_DECODER_IMPL_H
 
-#include <blockstream/turbo_decoder.h>
+#include <blocksat/turbo_decoder.h>
 
 #include "Tools/types.h"
 #include "Module/Interleaver/LTE/Interleaver_LTE.hpp"
@@ -37,7 +37,7 @@
 using namespace aff3ct;
 
 namespace gr {
-  namespace blockstream {
+  namespace blocksat {
 
     class turbo_decoder_impl : public turbo_decoder
     {
@@ -70,8 +70,8 @@ namespace gr {
 
     };
 
-  } // namespace blockstream
+  } // namespace blocksat
 } // namespace gr
 
-#endif /* INCLUDED_BLOCKSTREAM_TURBO_DECODER_IMPL_H */
+#endif /* INCLUDED_BLOCKSAT_TURBO_DECODER_IMPL_H */
 

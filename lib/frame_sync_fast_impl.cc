@@ -50,7 +50,7 @@ void __debug_log(const char* fmt, ...)
 }
 
 namespace gr {
-  namespace blockstream {
+  namespace blocksat {
 
     /*
      * Print System Timestamp
@@ -577,5 +577,5 @@ namespace gr {
       {
           return d_frame_lock;
       }
-    } /* namespace blockstream */
+    } /* namespace blocksat */
   } /* namespace gr */

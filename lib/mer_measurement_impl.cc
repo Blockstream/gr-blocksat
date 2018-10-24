@@ -30,7 +30,7 @@
 #include "mer_measurement_impl.h"
 
 namespace gr {
-  namespace blockstream {
+  namespace blocksat {
 
     mer_measurement::sptr
     mer_measurement::make(int N, int M)
@@ -170,5 +170,5 @@ namespace gr {
       return d_snr_db;
     }
 
-  } /* namespace blockstream */
+  } /* namespace blocksat */
 } /* namespace gr */

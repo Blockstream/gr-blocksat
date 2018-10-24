@@ -14,7 +14,7 @@
     </param>
     <param>
       <key>category</key>
-      <value>[Blockstream]/Synchronizers</value>
+      <value>[Blockstream Satellite]/Synchronizers</value>
     </param>
     <param>
       <key>comment</key>
@@ -735,7 +735,7 @@ sum(abs(rx_sym).^2)</value>
     </param>
   </block>
   <block>
-    <key>blockstream_frame_sync_fast</key>
+    <key>blocksat_frame_sync_fast</key>
     <param>
       <key>alias</key>
       <value></value>
@@ -778,7 +778,7 @@ sum(abs(rx_sym).^2)</value>
     </param>
     <param>
       <key>id</key>
-      <value>blockstream_frame_sync_fast_0</value>
+      <value>blocksat_frame_sync_fast_0</value>
     </param>
     <param>
       <key>maxoutbuf</key>
@@ -1324,7 +1324,7 @@ sum(abs(rx_sym).^2)</value>
   </connection>
   <connection>
     <source_block_id>blocks_multiply_const_vxx_1</source_block_id>
-    <sink_block_id>blockstream_frame_sync_fast_0</sink_block_id>
+    <sink_block_id>blocksat_frame_sync_fast_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>2</sink_key>
   </connection>
@@ -1342,7 +1342,7 @@ sum(abs(rx_sym).^2)</value>
   </connection>
   <connection>
     <source_block_id>blocks_multiply_xx_0</source_block_id>
-    <sink_block_id>blockstream_frame_sync_fast_0</sink_block_id>
+    <sink_block_id>blocksat_frame_sync_fast_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>1</sink_key>
   </connection>
@@ -1371,19 +1371,19 @@ sum(abs(rx_sym).^2)</value>
     <sink_key>1</sink_key>
   </connection>
   <connection>
-    <source_block_id>blockstream_frame_sync_fast_0</source_block_id>
+    <source_block_id>blocksat_frame_sync_fast_0</source_block_id>
     <sink_block_id>pad_sink_1</sink_block_id>
     <source_key>1</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>blockstream_frame_sync_fast_0</source_block_id>
+    <source_block_id>blocksat_frame_sync_fast_0</source_block_id>
     <sink_block_id>pad_sink_2</sink_block_id>
     <source_key>2</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>blockstream_frame_sync_fast_0</source_block_id>
+    <source_block_id>blocksat_frame_sync_fast_0</source_block_id>
     <sink_block_id>pad_sink_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
@@ -1402,7 +1402,7 @@ sum(abs(rx_sym).^2)</value>
   </connection>
   <connection>
     <source_block_id>pad_source_0</source_block_id>
-    <sink_block_id>blockstream_frame_sync_fast_0</sink_block_id>
+    <sink_block_id>blocksat_frame_sync_fast_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
