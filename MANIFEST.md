@@ -1,18 +1,31 @@
 title: Blockstream Satellite Receiver OOT Module
 brief: Blockstream Satellite receiver signal processing blocks.
-tags: # Tags are arbitrary, but look at CGRAN what other authors are using
+tags:
   - sdr
-  - blockstream
+  - Blockstream Satellite
   - bitcoin
 author:
-  - Author Name <authors@email.address>
+  - Blockstream
 copyright_owner:
-  - Copyright Owner 1
+  - None
 license:
-#repo: # Put the URL of the repository here, or leave blank for default
-#website: <module_website> # If you have a separate project website, put it here
+repo: https://github.com/Blockstream/gr-blocksat
+website: https://blockstream.com/satellite/
 #icon: <icon_url> # Put a URL to a square image here that will be used as an icon on CGRAN
 ---
-A longer, multi-line description of gr-blockstream.
-You may use some *basic* Markdown here.
-If left empty, it will try to find a README file instead.
+The "gr-blocksat" GNU Radio out-of-tree (OOT) module contains the signal
+processing blocks that are used in the Blockstream Satellite receiver. More
+specifically, blocks for:
+
+- Frame timing recovery;
+- Carrier phase recovery;
+- Interfacing to an Aff3ct-based Turbo Decoder;
+- Modulation error ratio measurement;
+- Carrier-frequency offset monitoring;
+- Numerically-controlled oscillator (NCO);
+- and other miscellaneous signal processing tasks.
+
+This module is used in the Blockstream Satellite receiver flowgraph, whose
+source is available in
+[blockstream/satellite](https://github.com/Blockstream/satellite).
+
