@@ -19,8 +19,7 @@
 
 install(FILES
     blocksat_frame_sync_fast.xml
-    blocksat_file_sink_nonblock.xml
-    blocksat_fifo_async_sink.xml
+    blocksat_protocol_sink.xml
     blocksat_turbo_decoder.xml
     blocksat_mer_measurement.xml
     blocksat_da_carrier_phase_rec.xml

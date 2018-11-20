@@ -33,10 +33,10 @@ GR_PYTHON_INSTALL(
     __init__.py
     ffw_coarse_freq_rec.py
     frame_synchronizer.py
-    file_sink_nonblock.py
     tuning_control.py
-    fifo_async_sink.py
-    rx_logger.py DESTINATION ${GR_PYTHON_DIR}/blocksat
+    protocol_sink.py
+    rx_logger.py
+    pipe.py DESTINATION ${GR_PYTHON_DIR}/blocksat
 )
 
 ########################################################################
@@ -47,8 +47,7 @@ include(GrTest)
 set(GR_TEST_TARGET_DEPS gnuradio-blocksat)
 set(GR_TEST_PYTHON_DIRS ${CMAKE_BINARY_DIR}/swig)
 GR_ADD_TEST(qa_frame_sync_fast ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_frame_sync_fast.py)
-GR_ADD_TEST(qa_file_sink_nonblock ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_file_sink_nonblock.py)
-GR_ADD_TEST(qa_fifo_async_sink ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_fifo_async_sink.py)
+GR_ADD_TEST(qa_protocol_sink ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_protocol_sink.py)
 GR_ADD_TEST(qa_turbo_decoder ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_turbo_decoder.py)
 GR_ADD_TEST(qa_mer_measurement ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_mer_measurement.py)
 GR_ADD_TEST(qa_da_carrier_phase_rec ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_da_carrier_phase_rec.py)

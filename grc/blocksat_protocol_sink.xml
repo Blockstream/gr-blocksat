@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<block>
+  <name>Blocksat Protocol Sink</name>
+  <key>blocksat_protocol_sink</key>
+  <category>[Blockstream Satellite]/FIFO</category>
+  <import>import blocksat</import>
+  <make>blocksat.protocol_sink($blocks_pipe, $user_pipe, $protocol_version, $disable_api)</make>
+  <param>
+    <name>Blocks Pipe</name>
+    <key>blocks_pipe</key>
+    <type>string</type>
+  </param>
+  <param>
+    <name>User Data Pipe</name>
+    <key>user_pipe</key>
+    <type>string</type>
+  </param>
+  <param>
+    <name>Protocol Version</name>
+    <key>protocol_version</key>
+    <value>1</value>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Disable API Data</name>
+    <key>disable_api</key>
+    <value>False</value>
+    <type>bool</type>
+  </param>
+  <sink>
+    <name>async_pdu</name>
+    <type>message</type>
+  </sink>
+</block>
