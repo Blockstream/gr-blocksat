@@ -28,14 +28,13 @@ from pipe import Pipe
 
 
 # Constants
-HEADER_FORMAT       = '!c7x'
-HDLC_MTU            = 4096
-BLOCKSAT_HEADER_LEN = 8
-MIN_PDU_LEN         = 1024
-BLOCKSAT_MTU        = HDLC_MTU - BLOCKSAT_HEADER_LEN
-TYPE_BLOCK          = b'\x00'
-TYPE_API_DATA       = b'\x01'
-
+BLOCKSAT_PKT_HEADER_FORMAT = '!c7x'
+BLOCKSAT_PKT_HEADER_LEN    = 8
+TYPE_BLOCK                 = b'\x00'
+TYPE_API_DATA              = b'\x01'
+OUT_DATA_HEADER_FORMAT     = '32sQ'
+OUT_DATA_HEADER_LEN        = 40
+OUT_DATA_DELIMITER         = 'vyqzbefrsnzqahgdkrsidzigxvrppato'
 
 def convert_size(size_bytes):
     """Convert a number of bytes to a string with dynamic byte units"""
@@ -56,16 +55,19 @@ class InvalidHeader(Exception):
 class BlocksatPacket():
     def __init__(self, raw_packet):
         try:
-            header_data = struct.unpack(HEADER_FORMAT,
-                                        raw_packet[:BLOCKSAT_HEADER_LEN])
+            header_data = struct.unpack(BLOCKSAT_PKT_HEADER_FORMAT,
+                                        raw_packet[:BLOCKSAT_PKT_HEADER_LEN])
         except:
             raise InvalidHeader('Invalid header.')
 
         # Fill in the information from the header
-        self.type   = header_data[0]
+        self.pkt_type = chr(ord(header_data[0]) & ord(b'\x01'))
+
+        # Check the more fragments field
+        self.more_fragments = (ord(header_data[0]) & ord(b'\x80')) != 0
 
         # Fill the payload
-        self.payload = raw_packet[BLOCKSAT_HEADER_LEN:]
+        self.payload = raw_packet[BLOCKSAT_PKT_HEADER_LEN:]
 
 
 class protocol_sink(gr.basic_block):
@@ -91,6 +93,9 @@ class protocol_sink(gr.basic_block):
         self.protocol_version = protocol_version
         self.disable_api      = disable_api
 
+        # Buffer to hold API data
+        self.api_buffer = b''
+
         # Stats
         self.blocks_cnt   = 0
         self.api_data_cnt = 0
@@ -106,11 +111,26 @@ class protocol_sink(gr.basic_block):
     def output_packet_data(self, packet):
         """Output the content of a Blocksat Packet to named pipe(s)
         """
-        if packet.type == TYPE_API_DATA and (not self.disable_api):
-            self.user_pipe.write(packet.payload)
+        if packet.pkt_type == TYPE_API_DATA and (not self.disable_api):
+            # Save data in buffer
+            self.api_buffer += packet.payload
+
+            # Wait the last fragment and then output the data within a structure
+            if (not packet.more_fragments):
+                # Struct has delimiter and message length
+                out_data_header = struct.pack(OUT_DATA_HEADER_FORMAT,
+                                              OUT_DATA_DELIMITER,
+                                              len(self.api_buffer))
+
+                # Output to pipe
+                self.user_pipe.write(out_data_header + self.api_buffer)
+
+                # And clean the API data buffer
+                self.api_buffer = b''
+
             self.api_data_cnt += len(packet.payload)
 
-        elif packet.type == TYPE_BLOCK:
+        elif packet.pkt_type == TYPE_BLOCK:
             self.blocks_pipe.write(packet.payload)
             self.blocks_cnt += len(packet.payload)
 
