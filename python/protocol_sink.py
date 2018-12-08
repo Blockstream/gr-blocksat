@@ -87,6 +87,10 @@ class protocol_sink(gr.basic_block):
                                 name="protocol_sink",
                                 in_sig=[],
                                 out_sig=[])
+        # Validate parameters
+        if (protocol_version < 1 or protocol_version > 2):
+            raise ValueError("Protocol version should be either 1 or 2")
+
         # Input parameters
         self.protocol_version = protocol_version
         self.disable_api      = disable_api
