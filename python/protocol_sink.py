@@ -88,10 +88,16 @@ class protocol_sink(gr.basic_block):
                                 in_sig=[],
                                 out_sig=[])
         # Input parameters
-        self.blocks_pipe      = Pipe(blocks_pipe)
-        self.user_pipe        = Pipe(user_pipe) if (not disable_api) else None
         self.protocol_version = protocol_version
         self.disable_api      = disable_api
+
+        # Open named pipes
+        self.blocks_pipe      = Pipe(blocks_pipe)
+
+        if ((self.protocol_version > 1) and (not disable_api)):
+            self.user_pipe = Pipe(user_pipe)
+        else:
+            self.user_pipe = None
 
         # Buffer to hold API data
         self.api_buffer = b''
