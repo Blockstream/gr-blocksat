@@ -32,9 +32,11 @@ BLOCKSAT_PKT_HEADER_FORMAT = '!c7x'
 BLOCKSAT_PKT_HEADER_LEN    = 8
 TYPE_BLOCK                 = b'\x00'
 TYPE_API_DATA              = b'\x01'
-OUT_DATA_HEADER_FORMAT     = '32sQ'
-OUT_DATA_HEADER_LEN        = 40
-OUT_DATA_DELIMITER         = 'vyqzbefrsnzqahgdkrsidzigxvrppato'
+OUT_DATA_HEADER_FORMAT     = '64sQ'
+OUT_DATA_HEADER_LEN        = 64 + 8
+OUT_DATA_DELIMITER         = 'vyqzbefrsnzqahgdkrsidzigxvrppato' + \
+                             '\xe0\xe0$\x1a\xe4["\xb5Z\x0bv\x17\xa7\xa7\x9d' + \
+                             '\xa5\xd6\x00W}M\xa6TO\xda7\xfaeu:\xac\xdc'
 
 def convert_size(size_bytes):
     """Convert a number of bytes to a string with dynamic byte units"""
