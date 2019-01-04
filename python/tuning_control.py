@@ -148,6 +148,7 @@ class tuning_control(threading.Thread):
         frame_lock_acquired = True
 
       # Stop when frame lock is achieved or all frequencies are scanned
+      retry_start = False
       if (self.freq_idx == self.n_scan_steps or frame_lock_acquired):
 
         # Best frequency:
@@ -174,6 +175,9 @@ class tuning_control(threading.Thread):
 
             os._exit(1)
           else:
+            # Flag that we are restarting the scan for a retry
+            retry_start = True
+
             # Double the scan interval
             self.scan_interval = 2 * self.scan_interval
 
@@ -193,8 +197,12 @@ class tuning_control(threading.Thread):
 
           n_attempts += 1
 
-      if (self.scan_mode):
-        # Proceed to analyze the next frequency:
+      # Proceed to analyze the next frequency
+      #
+      # NOTE: If this is after reseting the frequency for another scan attempt
+      # (on "retry_start""), don't move to the next frequency yet, as the
+      # initial scan frequency was just reset and is not tested yet.
+      if (self.scan_mode and not retry_start):
         self.scan_next_freq()
 
     # ------- Scan exit routine -------
