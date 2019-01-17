@@ -4,7 +4,7 @@
   <key>blocksat_protocol_sink</key>
   <category>[Blockstream Satellite]/FIFO</category>
   <import>import blocksat</import>
-  <make>blocksat.protocol_sink($blocks_pipe, $user_pipe, $protocol_version, $disable_api)</make>
+  <make>blocksat.protocol_sink($blocks_pipe, $user_pipe, $protocol_version, $disable_api, $disable_blocks)</make>
   <param>
     <name>Blocks Pipe</name>
     <key>blocks_pipe</key>
@@ -24,6 +24,12 @@
   <param>
     <name>Disable API Data</name>
     <key>disable_api</key>
+    <value>False</value>
+    <type>bool</type>
+  </param>
+  <param>
+    <name>Disable Blocks Data</name>
+    <key>disable_blocks</key>
     <value>False</value>
     <type>bool</type>
   </param>
