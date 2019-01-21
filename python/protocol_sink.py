@@ -44,12 +44,12 @@ OVERFLOW_WARNING_POINT     = 5
 def convert_size(size_bytes):
     """Convert a number of bytes to a string with dynamic byte units"""
     if size_bytes == 0:
-        return "0B"
-    unit = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
+        return "0 B"
+    unit = ("B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
     i = int(math.floor(math.log(size_bytes, 1024)))
     p = math.pow(1024, i)
     s = round(size_bytes / p, 2)
-    return "%4s %2s" % (s, unit[i])
+    return "%5s %2s" % (s, unit[i])
 
 
 class InvalidHeader(Exception):
@@ -73,6 +73,45 @@ class BlocksatPacket():
 
         # Fill the payload
         self.payload = raw_packet[BLOCKSAT_PKT_HEADER_LEN:]
+
+
+class RateAvg():
+    """Compute the moving average byte rate
+
+    Args:
+        window_len : Observation window length
+
+    """
+    def __init__(self, window_len):
+        self.byte_cnt    = list()
+        self.tstamp_hist = list()
+        self.window_len  = window_len
+        self.value       = None
+
+    def update(self, new_total, tstamp):
+        """Save byte consumption snapshots and update average"""
+
+        # Move window - pop oldest value
+        if (len(self.tstamp_hist) >= self.window_len):
+            self.tstamp_hist.pop(0)
+            self.byte_cnt.pop(0)
+
+        # Append new value
+        self.tstamp_hist.append(tstamp)
+        self.byte_cnt.append(new_total)
+
+        # Return if this is still the first sample
+        if (len(self.tstamp_hist) == 1):
+            return
+
+        # Check observation interval represented in the window
+        interval = self.tstamp_hist[-1] - self.tstamp_hist[0]
+
+        # Total number of bytes consumed during the window
+        bytes_per_window = self.byte_cnt[-1] - self.byte_cnt[0]
+
+        # Average rate
+        self.value = float(bytes_per_window) / interval
 
 
 class protocol_sink(gr.basic_block):
@@ -116,8 +155,12 @@ class protocol_sink(gr.basic_block):
         self.api_buffer = b''
 
         # Stats
-        self.blk_data_cnt = 0
-        self.api_data_cnt = 0
+        self.blk_data_cnt  = 0
+        self.api_data_cnt  = 0
+        self.blk_byte_rate = RateAvg(5) # Compute over 5 secs. sample ~ once/sec
+        self.api_byte_rate = RateAvg(5) # Compute over 5 secs, sample ~ once/sec
+        self.stats_period  = 1
+        self.next_stats    = time.time()
 
         # Print control
         self.print_period            = 10
@@ -220,6 +263,7 @@ class protocol_sink(gr.basic_block):
                 # Clean the API data buffer
                 self.api_buffer = b''
 
+            # Global and monotonic API data counter
             self.api_data_cnt += len(packet.payload)
 
         elif packet.pkt_type == TYPE_BLOCK and (not self.disable_blk):
@@ -265,41 +309,79 @@ class protocol_sink(gr.basic_block):
             if (blk_data_buffer_occ == 0):
                 self.blk_data_available.set()
 
+            # Global and monotonic blocks data counter
             self.blk_data_cnt += len(packet.payload)
 
-        # Is it time to print data stats?
+        # Is it time to update data stats?
         current_t = time.time()
+        if (current_t > self.next_stats):
+            self.update_stats()
+            # Schedule next
+            self.next_stats = current_t + self.stats_period
+
+        # Is it time to print data stats?
         if (current_t > self.next_print):
-            if self.api_ovflw_print_pending:
-                print("%s WARNING: API data buffer full - lost %d bytes" %(
-                    "[" + time.strftime("%Y-%m-%d %H:%M:%S") + "]",
-                    self.api_data_buffer_del_cnt
-                ))
-                print("NOTE: If not reading API data from \"%s\", "
-                      %(self.api_pipe.name) + "run with \"--no-api\"" )
-                self.api_data_buffer_del_cnt = 0
-                self.api_ovflw_print_pending = False
-
-            elif self.blk_ovflw_print_pending:
-                print("%s WARNING: Blocks data buffer full - lost %d bytes" %(
-                    "[" + time.strftime("%Y-%m-%d %H:%M:%S") + "]",
-                    self.blk_data_buffer_del_cnt
-                ))
-                print("NOTE: If not reading blocks data from \"%s\", "
-                      %(self.blk_pipe.name) + "run with \"--no-blocks\"" )
-                self.blk_data_buffer_del_cnt = 0
-                self.blk_ovflw_print_pending = False
-
-            # Print data counts with timestamp
-            timestamp  = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            print("--------------------------------------------------------------------------------")
-            print('[%s] Rx Data\t Blocks: %7s\tUser API: %7s' %(
-                timestamp, convert_size(self.blk_data_cnt),
-                convert_size(self.api_data_cnt)))
-            print("--------------------------------------------------------------------------------")
-
+            self.log_stats()
             # Schedule next print
             self.next_print = current_t + self.print_period
+
+    def update_stats(self):
+        """Update rate statistics"""
+
+        # Update rate stats
+        t_tstamp = time.time()
+        self.api_byte_rate.update(self.api_data_cnt, t_tstamp)
+        self.blk_byte_rate.update(self.blk_data_cnt, t_tstamp)
+
+    def log_stats(self):
+        """Print rate/rx data statistics"""
+        if self.api_ovflw_print_pending:
+            print("%s WARNING: API data buffer full - lost %d bytes" %(
+                "[" + time.strftime("%Y-%m-%d %H:%M:%S") + "]",
+                self.api_data_buffer_del_cnt
+            ))
+            print("NOTE: If not reading API data from \"%s\", "
+                  %(self.api_pipe.name) + "run with \"--no-api\"" )
+            self.api_data_buffer_del_cnt = 0
+            self.api_ovflw_print_pending = False
+
+        elif self.blk_ovflw_print_pending:
+            print("%s WARNING: Blocks data buffer full - lost %d bytes" %(
+                "[" + time.strftime("%Y-%m-%d %H:%M:%S") + "]",
+                self.blk_data_buffer_del_cnt
+            ))
+            print("NOTE: If not reading blocks data from \"%s\", "
+                  %(self.blk_pipe.name) + "run with \"--no-blocks\"" )
+            self.blk_data_buffer_del_cnt = 0
+            self.blk_ovflw_print_pending = False
+
+        # Print data counts with timestamp
+        dt_tstamp  = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        if (self.disable_api):
+            api_rx_print = "Disabled"
+        else:
+            if (self.api_byte_rate.value is not None):
+                api_rx_print = "%8s (%3.1f kB/sec)" %(
+                    convert_size(self.api_data_cnt),
+                    self.api_byte_rate.value / 1e3)
+            else:
+                api_rx_print = "%8s" %(convert_size(self.api_data_cnt))
+
+        if (self.disable_blk):
+            blk_rx_print = "Disabled"
+        else:
+            if (self.blk_byte_rate.value is not None):
+                blk_rx_print = "%8s (%3.1f kB/sec)" %(
+                    convert_size(self.blk_data_cnt),
+                    self.blk_byte_rate.value / 1e3)
+            else:
+                blk_rx_print = "%8s" %(convert_size(self.blk_data_cnt))
+
+        print("--------------------------------------------------------------------------------")
+        print('[%s] Rx Data\t%6s: %s\n' %(dt_tstamp, "Blocks", blk_rx_print) +
+                  '%29s\t%6s: %s' %("", "API", api_rx_print))
+        print("--------------------------------------------------------------------------------")
 
     def handle_msg(self, msg_pmt):
         """Process incoming GNU Radio PDU containing a Blocksat Packet
