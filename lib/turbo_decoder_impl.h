@@ -52,7 +52,13 @@ namespace gr {
 			int d_output_size ;
 
 		public:
-			turbo_decoder_impl(int N, int K);
+			/*!
+			 * \brief Turbo decoder implementation
+			 * \param N codeword length
+			 * \param K dataword length
+			 * \param n_ite maximum number of iterations
+			 */
+			turbo_decoder_impl(int N, int K, int n_ite);
 			~turbo_decoder_impl();
 
 			// Where all the action really happens

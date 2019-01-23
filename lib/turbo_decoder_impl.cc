@@ -31,16 +31,16 @@ namespace gr {
 	namespace blocksat {
 
 		turbo_decoder::sptr
-		turbo_decoder::make(int N, int K)
+		turbo_decoder::make(int N, int K, int n_ite)
 		{
 			return gnuradio::get_initial_sptr
-				(new turbo_decoder_impl(N, K));
+				(new turbo_decoder_impl(N, K, n_ite));
 		}
 
 		/*
 		 * The private constructor
 		 */
-		turbo_decoder_impl::turbo_decoder_impl(int N, int K)
+		turbo_decoder_impl::turbo_decoder_impl(int N, int K, int n_ite)
 			: gr::block("turbo_decoder",
 			            gr::io_signature::make(1, 1, sizeof(signed char)),
 			            gr::io_signature::make(1, 1, sizeof(unsigned char)))
@@ -65,7 +65,7 @@ namespace gr {
 
 			sub_dec = new module::Decoder_RSC_BCJR_seq_very_fast <B_8,Q_8,QD_8,tools::max<Q_8>,tools::max<QD_8>> (K, trellis);
 
-			dec = new module::Decoder_turbo_fast<B_8,Q_8>(K, N, 6, *interleaver, *sub_dec, *sub_dec);
+			dec = new module::Decoder_turbo_fast<B_8,Q_8>(K, N, n_ite, *interleaver, *sub_dec, *sub_dec);
 
 			set_fixed_rate(true);
 			set_relative_rate((double)K/(double)N);

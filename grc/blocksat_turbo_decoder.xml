@@ -4,7 +4,7 @@
   <key>blocksat_turbo_decoder</key>
   <category>[Blockstream Satellite]/Error Coding</category>
   <import>import blocksat</import>
-  <make>blocksat.turbo_decoder($N, $K)</make>
+  <make>blocksat.turbo_decoder($N, $K, $n_ite)</make>
   <param>
     <name>dataword_len</name>
     <key>K</key>
@@ -13,6 +13,11 @@
   <param>
     <name>codeword_len</name>
     <key>N</key>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Max Iterations</name>
+    <key>n_ite</key>
     <type>int</type>
   </param>
   <sink>
