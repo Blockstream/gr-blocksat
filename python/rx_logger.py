@@ -17,8 +17,10 @@ class Logger(threading.Thread):
         print_fcn : The specific print function to be used every period
         lock      : A mutex used to synchronize prints across instances
         start_en  : Flag to start the thread in enabled state
+        label_setter : Setter function for the variable used in a GUI label
     """
-    def __init__(self, block_obj, period, print_fcn, lock, start_en=True):
+    def __init__(self, block_obj, period, print_fcn, lock, start_en=True,
+                 label_setter=None):
         ''' Init Logger '''
 
         # Init daemon thread
@@ -30,6 +32,7 @@ class Logger(threading.Thread):
         self.log       = print_fcn
         self.lock      = lock
         self.enabled   = start_en
+        self.label_setter = label_setter
 
     def run(self):
 
@@ -59,7 +62,7 @@ class Logger(threading.Thread):
             # Call Print
             self.lock.acquire()
             try:
-                self.log(self.block_obj)
+                self.log(self.block_obj, self.label_setter)
             finally:
                 self.lock.release()
 
@@ -72,7 +75,7 @@ class Logger(threading.Thread):
         self.enabled = False
 
 
-def print_frame_sync(block_obj):
+def print_frame_sync(block_obj, label_setter):
 
     # Get data from the frame synchronizer block
     state            = block_obj.get_state()
@@ -85,25 +88,33 @@ def print_frame_sync(block_obj):
     sys.stdout.write("Frame Timing => ")
 
     if (state == 0):
-        sys.stdout.write("SEARCHING")
+        state_str = "SEARCHING"
     else:
-        sys.stdout.write("LOCKED")
+        state_str = "LOCKED"
+
+    sys.stdout.write(state_str)
+
+    # Set the state string in the label as well
+    if (label_setter is not None):
+        label_setter(state_str)
 
     sys.stdout.write("\t Timing Indicator: ")
 
     if (timing_indicator > 200):
-        sys.stdout.write("STRONG")
+        level = "STRONG"
     elif (timing_indicator > 100):
-        sys.stdout.write("GOOD")
+        level = "GOOD"
     else:
-        sys.stdout.write("WEAK")
+        level = "WEAK"
+
+    sys.stdout.write(level)
     sys.stdout.write("\r\n")
     sys.stdout.write("----------------------------------------")
     sys.stdout.write("----------------------------------------\n")
     sys.stdout.flush()
 
 
-def print_snr(block_obj):
+def print_snr(block_obj, label_setter):
 
     # Get data from the SNR meter block
     snr_db = block_obj.get_snr()
@@ -127,7 +138,7 @@ def print_snr(block_obj):
     sys.stdout.flush()
 
 
-def print_ber(block_obj):
+def print_ber(block_obj, label_setter):
 
     # Get BER
     ber = block_obj.get_ber()
@@ -137,14 +148,19 @@ def print_ber(block_obj):
     sys.stdout.write("----------------------------------------\n")
     sys.stdout.write("[" + time.strftime("%Y-%m-%d %H:%M:%S") + "] ")
     sys.stdout.write("Bit Error Rate: ")
-    sys.stdout.write(str("{:.2E}".format(ber)))
+    ber_str = str("{:.2E}".format(ber))
+    sys.stdout.write(ber_str)
     sys.stdout.write("\r\n")
     sys.stdout.write("----------------------------------------")
     sys.stdout.write("----------------------------------------\n")
     sys.stdout.flush()
 
+    # Set the formatted ber in the label as well
+    if (label_setter is not None):
+        label_setter(ber_str)
 
-def print_cfo(block_obj):
+
+def print_cfo(block_obj, label_setter):
     global sample_rate
 
     norm_angular_freq = block_obj.get_frequency()
@@ -178,7 +194,8 @@ class rx_logger():
     def __init__(self, samp_rate, snr_meter_obj, snr_log_period,
                  frame_synchronizer_obj, frame_sync_log_period,
                  decoder_obj, ber_log_period, cfo_rec_obj,
-                 cfo_log_period, enabled_start):
+                 cfo_log_period, enabled_start,
+                 fs_label_setter, ber_label_setter):
 
         global sample_rate
         sample_rate = samp_rate
@@ -200,14 +217,16 @@ class rx_logger():
                                             frame_sync_log_period,
                                             print_frame_sync,
                                             lock,
-                                            enabled_start)
+                                            enabled_start,
+                                            fs_label_setter)
 
         if (decoder_obj and (ber_log_period > 0)):
             self.ber_logger = Logger(decoder_obj,
                                      ber_log_period,
                                      print_ber,
                                      lock,
-                                     enabled_start)
+                                     enabled_start,
+                                     ber_label_setter)
 
         if (cfo_rec_obj and (cfo_log_period > 0)):
             self.cfo_logger = Logger(cfo_rec_obj,

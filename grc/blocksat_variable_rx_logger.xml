@@ -16,7 +16,9 @@ self.$(id) = blocksat.rx_logger(
     $ber_log_period,
     $(cfo_rec()),
     $cfo_log_period,
-    $enabled_start
+    $enabled_start,
+    (None if not hasattr(self, 'set_fs_label') else self.set_fs_label),
+    (None if not hasattr(self, 'set_ber_label') else self.set_ber_label)
 )
     </make>
     <callback>self.set_$(id)($value)</callback>
@@ -86,5 +88,16 @@ self.$(id) = blocksat.rx_logger(
         <type>raw</type>
         <hide>part</hide>
     </param>
+    <doc>
+Blocksat Receiver Logger
+
+Collects metrics from various gr-blocksat blocks and logs them periodically into
+the console.
+
+Also helps with GUI label updates for GUI-based receivers. Assumes that
+variables "fs_label" and "ber_label" are defined in the flowgraph for the frame
+synchronization state and the bit error rate stats, respectively. Automatically
+passes the setter for these variables into the actual "Rx Logger" work function.
+    </doc>
 </block>
 
