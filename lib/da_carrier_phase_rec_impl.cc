@@ -27,6 +27,14 @@
 #include <gnuradio/math.h>
 #include "da_carrier_phase_rec_impl.h"
 
+#undef DEBUG
+
+#ifdef DEBUG
+#define debug_printf printf
+#else
+#define debug_printf(...) if (false) printf(__VA_ARGS__)
+#endif
+
 namespace gr {
   namespace blocksat {
 
@@ -107,7 +115,7 @@ namespace gr {
       * Carrier Phase Error Detector Gain is unitary (Kp = 1)
       * DDS Gain is unitary (K0 = 1)
       */
-      // printf("K1 configured to:\t %f\n", K1);
+      debug_printf("%s: K1 configured to:\t %f\n", __func__, K1);
 
       return K1;
     }
@@ -133,7 +141,7 @@ namespace gr {
       * Carrier Phase Error Detector Gain is unitary (Kp = 1)
       * DDS Gain is unitary (K0 = 1)
       */
-      // printf("K2 configured to:\t %f\n", K2);
+      debug_printf("%s: K2 configured to:\t %f\n", __func__, K2);
 
       return K2;
     }
@@ -210,24 +218,34 @@ namespace gr {
          * ambiguity. Meanwhile, when using the conjugate product, ambiguity is
          * not a problem.
          *
+         * The above error detector requires an "atan" operation. To avoid this,
+         * use the maximum-likelihood approach.
+         *
          */
         if (is_preamble[i] && d_data_aided) {
             // Preamble
 
-            // Data-aided error detector's conjugate product:
-            conj_prod_err = x_derotated * conj(d_tx_pilots[d_i_sym]);
+            // Data-aided ML phase error detector:
+            phi_error = (x_derotated.imag() * d_tx_pilots[d_i_sym].real()) -
+                (x_derotated.real() * d_tx_pilots[d_i_sym].imag());
+
+            debug_printf("%s: In #%4u\t%4.2f + j%4.2f\t%6s\t%4.2f + j%4.2f\n",
+                         __func__, d_i_sym, rx_sym_in[i].real(),
+                         rx_sym_in[i].imag(), "Pilot",
+                         d_tx_pilots[d_i_sym].real(),
+                         d_tx_pilots[d_i_sym].imag());
+
+            debug_printf("%s: Phase Error: %4.2f\n", __func__, phi_error);
         } else {
             // Payload
 
             // Sliced symbol (nearest constellation point)
             x_sliced = slice_symbol(x_derotated, d_const_order);
 
-            // Decision-directed error detector's conjugate product:
-            conj_prod_err = x_derotated * conj(x_sliced);
+            // Decision-directed ML phase error detector:
+            phi_error = (x_derotated.imag() * x_sliced.real()) -
+                (x_derotated.real() * x_sliced.imag());
         }
-
-        // Phase error is the angle of the conjugate product:
-        phi_error = gr::fast_atan2f(conj_prod_err);
 
         /*
          * Outputs
