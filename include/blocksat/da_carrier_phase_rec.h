@@ -46,7 +46,11 @@ namespace gr {
        * class. blocksat::da_carrier_phase_rec::make is the public interface for
        * creating new instances.
        */
-      static sptr make(const std::vector<gr_complex> &preamble_syms, float noise_bw, float damp_factor, int M, bool data_aided, bool reset_per_frame);
+      static sptr make(const std::vector<gr_complex> &preamble_syms,
+                       float noise_bw, float damp_factor, int M,
+                       bool data_aided, bool reset_per_frame,
+                       const std::vector<gr_complex> &tracking_syms,
+                       int tracking_interval, int frame_len);
     };
 
   } // namespace blocksat
