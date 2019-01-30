@@ -28,6 +28,7 @@
 #include "da_carrier_phase_rec_impl.h"
 
 #undef DEBUG
+#undef DEBUG_FORECAST
 
 #ifdef DEBUG
 #define debug_printf printf
@@ -35,290 +36,329 @@
 #define debug_printf(...) if (false) printf(__VA_ARGS__)
 #endif
 
+#ifdef DEBUG_FORECAST
+#define debug_f_printf printf
+#else
+#define debug_f_printf(...) if (false) printf(__VA_ARGS__)
+#endif
+
 namespace gr {
-  namespace blocksat {
+	namespace blocksat {
 
-    da_carrier_phase_rec::sptr
-    da_carrier_phase_rec::make(const std::vector<gr_complex> &preamble_syms, float noise_bw, float damp_factor, int M, bool data_aided, bool reset_per_frame)
-    {
-      return gnuradio::get_initial_sptr
-        (new da_carrier_phase_rec_impl(preamble_syms, noise_bw, damp_factor, M, data_aided, reset_per_frame));
-    }
+		da_carrier_phase_rec::sptr
+		da_carrier_phase_rec::make(const std::vector<gr_complex> &preamble_syms,
+		                           float noise_bw, float damp_factor, int M,
+		                           bool data_aided, bool reset_per_frame,
+		                           const std::vector<gr_complex> &tracking_syms,
+		                           int tracking_interval, int frame_len)
+		{
+			return gnuradio::get_initial_sptr
+				(new da_carrier_phase_rec_impl(preamble_syms, noise_bw, damp_factor, M,
+				                               data_aided, reset_per_frame,
+				                               tracking_syms, tracking_interval,
+				                               frame_len));
+		}
 
-    /*
-     * The private constructor
-     */
-    static int is[] = {sizeof(gr_complex), sizeof(char)};
-    static std::vector<int> isig(is, is+sizeof(is)/sizeof(int));
-    static int os[] = {sizeof(gr_complex), sizeof(float)};
-    static std::vector<int> osig(os, os+sizeof(os)/sizeof(int));
-    da_carrier_phase_rec_impl::da_carrier_phase_rec_impl(const std::vector<gr_complex> &preamble_syms, float noise_bw, float damp_factor, int M, bool data_aided, bool reset_per_frame)
-      : gr::block("da_carrier_phase_rec",
-              io_signature::makev(2, 2, isig),
-              io_signature::makev(2, 2, osig)),
-              d_noise_bw(noise_bw),
-              d_damp_factor(damp_factor),
-              d_const_order(M),
-              d_data_aided(data_aided),
-              d_reset_per_frame(reset_per_frame),
-              d_i_sym(0),
-              d_nco_phase(0.0),
-              d_integrator(0.0),
-              d_preamble_state(0)
-    {
-      d_tx_pilots.resize(preamble_syms.size());
-      d_tx_pilots = preamble_syms;
-      d_K1 = set_K1(damp_factor, noise_bw);
-      d_K2 = set_K2(damp_factor, noise_bw);
-    }
+		/*
+		 * The private constructor
+		 */
+		static int is[] = {sizeof(gr_complex), sizeof(char)};
+		static std::vector<int> isig(is, is+sizeof(is)/sizeof(int));
+		static int os[] = {sizeof(gr_complex), sizeof(float)};
+		static std::vector<int> osig(os, os+sizeof(os)/sizeof(int));
+		da_carrier_phase_rec_impl::da_carrier_phase_rec_impl(
+			const std::vector<gr_complex> &preamble_syms, float noise_bw,
+			float damp_factor, int M, bool data_aided, bool reset_per_frame,
+			const std::vector<gr_complex> &tracking_syms, int tracking_interval,
+			int frame_len)
+			: gr::block("da_carrier_phase_rec",
+			            io_signature::makev(2, 2, isig),
+			            io_signature::makev(2, 2, osig)),
+			d_noise_bw(noise_bw),
+			d_damp_factor(damp_factor),
+			d_const_order(M),
+			d_data_aided(data_aided),
+			d_reset_per_frame(reset_per_frame),
+			d_nco_phase(0.0),
+			d_integrator(0.0),
+			d_tracking_interval(tracking_interval),
+			d_frame_len(frame_len),
+			d_const(M)
+		{
+			d_tx_pilots.resize(preamble_syms.size());
+			d_tx_pilots = preamble_syms;
+			d_preamble_len  = preamble_syms.size();
+			d_payload_len   = d_frame_len - d_preamble_len;
+			d_tracking_syms.resize(tracking_syms.size());
+			d_tracking_syms = tracking_syms;
+			d_tracking_len  = tracking_syms.size();
+			d_tracking_en   = (d_tracking_interval != 0);
+			d_data_plus_tracking_interval = d_tracking_interval + d_tracking_len;
+			if (d_tracking_en)
+			{
+				d_n_tracking_seqs = d_payload_len / d_data_plus_tracking_interval;
+				d_data_len = d_payload_len - (d_n_tracking_seqs * d_tracking_len);
+			} else {
+				d_n_tracking_seqs = 0;
+				d_data_len = d_payload_len;
+			}
 
-    /*
-     * Our virtual destructor.
-     */
-    da_carrier_phase_rec_impl::~da_carrier_phase_rec_impl()
-    {
-    }
+			d_K1 = set_K1(damp_factor, noise_bw);
+			d_K2 = set_K2(damp_factor, noise_bw);
 
-    void
-    da_carrier_phase_rec_impl::forecast (int noutput_items, gr_vector_int &ninput_items_required)
-    {
-      unsigned ninputs = ninput_items_required.size();
-      for(unsigned i = 0; i < ninputs; i++)
-      ninput_items_required[i] = noutput_items;
-    }
+			set_output_multiple(d_data_len);
+		}
 
-    /*
-    * Set PI Constants
-    *
-    * References
-    * [1] "Digital Communications: A Discrete-Time Approach", by Michael Rice
-    */
-    float da_carrier_phase_rec_impl::set_K1(float zeta, float Bn_Ts) {
-      float theta_n;
-      float Kp_K0_K1;
-      float K1;
+		/*
+		 * Our virtual destructor.
+		 */
+		da_carrier_phase_rec_impl::~da_carrier_phase_rec_impl()
+		{
+		}
 
-      // Definition theta_n (See Eq. C.60 in [1])
-      theta_n = Bn_Ts / (zeta + (1.0/(4*zeta)));
-      // Note: for this loop, Bn*Ts = Bn*T, because the loop operates at 1
-      // sample/symbol (at the symbol rate).
+		void
+		da_carrier_phase_rec_impl::forecast (int noutput_items,
+		                                     gr_vector_int &ninput_items_required)
+		{
+			unsigned ninputs  = ninput_items_required.size();
+			int n_frames      = noutput_items / d_data_len;
+			int n_in_required = n_frames * d_frame_len;
 
-      // Eq. C.56 in [1]:
-      Kp_K0_K1 = (4 * zeta * theta_n) / (1 + 2*zeta*theta_n + (theta_n*theta_n));
+			debug_f_printf("%s: noutput_items\t%d\n", __func__, noutput_items);
 
-      // Then obtain the PI contants:
-      K1 = Kp_K0_K1;
-      /*
-      * This value should be divided by (Kp * K0), but the latter is unitary
-      * here. That is:
-      *
-      * Carrier Phase Error Detector Gain is unitary (Kp = 1)
-      * DDS Gain is unitary (K0 = 1)
-      */
-      debug_printf("%s: K1 configured to:\t %f\n", __func__, K1);
+			for(unsigned i = 0; i < ninputs; i++) {
+				ninput_items_required[i] = n_in_required;
+			}
 
-      return K1;
-    }
-    float da_carrier_phase_rec_impl::set_K2(float zeta, float Bn_Ts) {
-      float theta_n;
-      float Kp_K0_K2;
-      float K2;
+			debug_f_printf("%s: n_in_required\t%d\n", __func__, n_in_required);
+		}
 
-      // Definition theta_n (See Eq. C.60 in [1])
-      theta_n = Bn_Ts / (zeta + (1.0/(4*zeta)));
-      // Note: for this loop, Bn*Ts = Bn*T, because the loop operates at 1
-      // sample/symbol (at the symbol rate).
+		/*
+		 * Set PI Constants
+		 *
+		 * References
+		 * [1] "Digital Communications: A Discrete-Time Approach", by Michael Rice
+		 */
+		float da_carrier_phase_rec_impl::set_K1(float zeta, float Bn_Ts) {
+			float theta_n;
+			float Kp_K0_K1;
+			float K1;
 
-      // Eq. C.56 in [1]:
-      Kp_K0_K2 = (4 * (theta_n*theta_n)) / (1 + 2*zeta*theta_n + (theta_n*theta_n));
+			// Definition theta_n (See Eq. C.60 in [1])
+			theta_n = Bn_Ts / (zeta + (1.0/(4*zeta)));
+			// Note: for this loop, Bn*Ts = Bn*T, because the loop operates at 1
+			// sample/symbol (at the symbol rate).
 
-      // Then obtain the PI contants:
-      K2 = Kp_K0_K2;
-      /*
-      * This value should be divided by (Kp * K0), but the latter is unitary
-      * here. That is:
-      *
-      * Carrier Phase Error Detector Gain is unitary (Kp = 1)
-      * DDS Gain is unitary (K0 = 1)
-      */
-      debug_printf("%s: K2 configured to:\t %f\n", __func__, K2);
+			// Eq. C.56 in [1]:
+			Kp_K0_K1 = (4 * zeta * theta_n) /
+				(1 + 2*zeta*theta_n + (theta_n*theta_n));
 
-      return K2;
-    }
+			// Then obtain the PI contants:
+			K1 = Kp_K0_K1;
+			/*
+			 * This value should be divided by (Kp * K0), but the latter is unitary
+			 * here. That is:
+			 *
+			 * Carrier Phase Error Detector Gain is unitary (Kp = 1)
+			 * DDS Gain is unitary (K0 = 1)
+			 */
+			debug_printf("%s: K1 configured to:\t %f\n", __func__, K1);
 
-    /*
-     * Main work
-     */
-    int da_carrier_phase_rec_impl::general_work(int noutput_items,
-        gr_vector_int &ninput_items,
-        gr_vector_const_void_star &input_items,
-        gr_vector_void_star &output_items)
-    {
-      const gr_complex *rx_sym_in = (const gr_complex*) input_items[0];
-      const char *is_preamble  = (const char*) input_items[1];
-      gr_complex *rx_sym_out = (gr_complex *) output_items[0];
-      float *error_out = (float *) output_items[1];
-      gr_complex nco_conj;
-      gr_complex x_derotated, x_sliced, conj_prod_err;
-      float phi_error;
-      float p_out, pi_out;
-      int n_consumed = 0, n_produced = 0;
+			return K1;
+		}
+		float da_carrier_phase_rec_impl::set_K2(float zeta, float Bn_Ts) {
+			float theta_n;
+			float Kp_K0_K2;
+			float K2;
 
-      // Do <+signal processing+>
-      for (int i = 0; i< noutput_items ; i++) {
-        // Keep track of the number of consumed inputs
-        n_consumed += 1;
+			// Definition theta_n (See Eq. C.60 in [1])
+			theta_n = Bn_Ts / (zeta + (1.0/(4*zeta)));
+			// Note: for this loop, Bn*Ts = Bn*T, because the loop operates at 1
+			// sample/symbol (at the symbol rate).
 
-        // Keep track of the symbol index
-        d_i_sym++;
+			// Eq. C.56 in [1]:
+			Kp_K0_K2 = (4 * (theta_n*theta_n)) /
+				(1 + 2*zeta*theta_n + (theta_n*theta_n));
 
-        /*
-         * Keep a state indicating whether symbol is preamble or not and use
-         * that to recognize the beginning of the frame (where symbol index
-         * should be 0)
-         */
+			// Then obtain the PI contants:
+			K2 = Kp_K0_K2;
+			/*
+			 * This value should be divided by (Kp * K0), but the latter is unitary
+			 * here. That is:
+			 *
+			 * Carrier Phase Error Detector Gain is unitary (Kp = 1)
+			 * DDS Gain is unitary (K0 = 1)
+			 */
+			debug_printf("%s: K2 configured to:\t %f\n", __func__, K2);
 
-        // Check the transition into the preamble, which happens whenever the
-        // previous state was not-preamble and the current input is preamble
-        if (d_preamble_state == 0 && is_preamble[i]) {
-          d_preamble_state = 1;
-          // Reset the symbol index
-          d_i_sym = 0;
+			return K2;
+		}
 
-          // Reset the loop state for each frame, if so desired
-          if (d_reset_per_frame) {
-            d_nco_phase  = 0.0; // Reset the NCO phase accumulator
-            d_integrator = 0.0; // Reset the integrator
-          }
-        } else if (d_preamble_state == 1 && !is_preamble[i]) {
-          d_preamble_state = 0;
-        }
+		/*
+		 * Main work
+		 */
+		int da_carrier_phase_rec_impl::general_work(int noutput_items,
+		                                            gr_vector_int &ninput_items,
+		                                            gr_vector_const_void_star &input_items,
+		                                            gr_vector_void_star &output_items)
+		{
+			const gr_complex *rx_sym_in = (const gr_complex*) input_items[0];
+			const char *is_preamble  = (const char*) input_items[1];
+			gr_complex *rx_sym_out = (gr_complex *) output_items[0];
+			float *error_out = (float *) output_items[1];
+			gr_complex x_derotated, x_sliced;
+			float phi_error;
+			int n_consumed = 0, n_produced = 0;
+			int n_frames = noutput_items / d_data_len;
 
-        // Update NCO (actually the complex conjugate of the NCO)
-        // nco_conj = gr_complex(cos(d_nco_phase), -sin(d_nco_phase));
-        nco_conj = gr_expj(-d_nco_phase);
+			debug_printf("%s: ninput items[0]: %d\t(%d frames)\n", __func__,
+			             ninput_items[0], n_frames);
+			debug_printf("%s: ninput items[1]: %d\n", __func__, ninput_items[1]);
+			debug_printf("%s: noutput items: %d\n", __func__, noutput_items);
 
-        // De-rotation:
-        x_derotated = rx_sym_in[i] * nco_conj;
+			/* Frame-by-frame processing
+			 *
+			 * Indexes:
+			 * i -> global symbol index used to read from input buffers
+			 * j -> from 0 to payload_len
+			 * k -> from 0 to segment (preamble, tracking or data interval) len
+			 */
+			int i = 0;
+			for (int i_frame = 0; i_frame < n_frames; i_frame++) {
+				// Keep track of the number of consumed inputs
+				n_consumed += d_frame_len;
 
-        /*
-         * Phase Error Detection
-         *
-         * When operating over the payload symbols, compute the phase error by
-         * inspecting the angle of the cross conjugate product between the
-         * sliced (symbols after decision) and the noisy received symbols. This
-         * is the decision-directed operation. Meanwhile, when operating over
-         * the preamble (the known training sequence), the error is taken from
-         * the angle of the cross conjugate product between the known preamble
-         * symbols and the noisy received symbols, operation is data-aided.
-         *
-         * Note that another possibility is obtaining the error by the direct
-         * difference between the angle of the received symbol and the angle of
-         * the expected symbol. However, this type of difference suffers from
-         * ambiguity. Meanwhile, when using the conjugate product, ambiguity is
-         * not a problem.
-         *
-         * The above error detector requires an "atan" operation. To avoid this,
-         * use the maximum-likelihood approach.
-         *
-         */
-        if (is_preamble[i] && d_data_aided) {
-            // Preamble
+				// Reset the loop state for each frame, if so desired
+				if (d_reset_per_frame) {
+					d_nco_phase  = 0.0; // Reset the NCO phase accumulator
+					d_integrator = 0.0; // Reset the integrator
+				}
 
-            // Data-aided ML phase error detector:
-            phi_error = (x_derotated.imag() * d_tx_pilots[d_i_sym].real()) -
-                (x_derotated.real() * d_tx_pilots[d_i_sym].imag());
+				/* Preamble */
 
-            debug_printf("%s: In #%4u\t%4.2f + j%4.2f\t%6s\t%4.2f + j%4.2f\n",
-                         __func__, d_i_sym, rx_sym_in[i].real(),
-                         rx_sym_in[i].imag(), "Pilot",
-                         d_tx_pilots[d_i_sym].real(),
-                         d_tx_pilots[d_i_sym].imag());
+				for (int k = 0; k < d_preamble_len; k++) {
+#ifdef DEBUG
+					if (!is_preamble[i])
+						printf("%s: ERROR\tpreamble alignment incorrect\n",
+						       __func__);
+#endif
+					/* NCO */
+					x_derotated = rx_sym_in[i] * gr_expj(-d_nco_phase);
 
-            debug_printf("%s: Phase Error: %4.2f\n", __func__, phi_error);
-        } else {
-            // Payload
+					/* DA phase error detector (second term null for BPSK) */
+					phi_error = (x_derotated.imag() * d_tx_pilots[k].real()) -
+						(x_derotated.real() * d_tx_pilots[k].imag());
 
-            // Sliced symbol (nearest constellation point)
-            x_sliced = slice_symbol(x_derotated, d_const_order);
+					/* PI loop update */
+					loop_step(phi_error);
 
-            // Decision-directed ML phase error detector:
-            phi_error = (x_derotated.imag() * x_sliced.real()) -
-                (x_derotated.real() * x_sliced.imag());
-        }
+					/* Debug */
+					debug_printf("%s: In #%4u\t%4.2f + j%4.2f\t", __func__, k,
+					             rx_sym_in[i].real(), rx_sym_in[i].imag());
+					debug_printf("%6s\t%4.2f + j%4.2f\t%6s\t%4.2f + j%4.2f\t",
+					             "De-rotated", x_derotated.real(),
+					             x_derotated.imag(),
+					             "Preamble", d_tx_pilots[k].real(),
+					             d_tx_pilots[k].imag());
+					debug_printf("Phase Error: %4.2f\n", phi_error);
 
-        /*
-         * Outputs
-         * (only for the payload)
-         */
-        if (!is_preamble[i]) {
-          // Put this de-rotated symbol in the ouput:
-          rx_sym_out[n_produced] = x_derotated;
+					i++;
+				}
 
-          // Error detector
-          error_out[n_produced] = phi_error;
+				/* Payload */
+				int j = 0;
+				while (j < d_payload_len) {
+					/* Data symbols */
+					for (int k = 0;
+					     (k < d_tracking_interval || d_tracking_interval == 0)
+						     && j < d_payload_len; k++) {
+						/* NCO */
+						x_derotated = rx_sym_in[i] * gr_expj(-d_nco_phase);
 
-          // Produce an output only for the payload
-          n_produced ++;
-        }
+						/* Sliced symbol (nearest constellation point) */
+						d_const.slice(&x_derotated, &x_sliced);
 
+						/* Decision-directed ML phase error detector: */
+						phi_error = (x_derotated.imag() * x_sliced.real()) -
+							(x_derotated.real() * x_sliced.imag());
 
-        /*
-        * Loop Filter
-        */
+						/*
+						 * Force error to zero if data-aided only
+						 *
+						 * FIXME: we set phase error to zero when not processing
+						 * the symbols. However, the true error is still
+						 * accumulating in between and we should have a way of
+						 * increase the weight of the next phase error detection
+						 * when it comes (e.g. for the first pilot symbol of the
+						 * next pilot segment).
+						 */
+						phi_error *= int(!d_data_aided);
 
-        // Proportional term
-        p_out  = phi_error * d_K1;
-        // Integral term
-        d_integrator = (phi_error * d_K2) + d_integrator;
-        // PI Filter output:
-        pi_out = p_out + d_integrator;
+						/* PI loop update */
+						loop_step(phi_error);
 
-        /*
-         * Next value for the phase accumulator
-         */
-        d_nco_phase = d_nco_phase + pi_out;
-      }
+						/* Outputs (only data symbols are output) */
+						rx_sym_out[n_produced] = x_derotated;
+						error_out[n_produced] = phi_error;
+						n_produced++;
 
-      // Always consume the same amount from both inputs
-      consume_each(n_consumed);
+						/* Debug */
+						debug_printf("%s: In #%4u\t%4.2f + j%4.2f\t", __func__,
+						             j + d_preamble_len, rx_sym_in[i].real(),
+						             rx_sym_in[i].imag());
+						debug_printf("%6s\t%4.2f + j%4.2f\t%6s\t",
+						             "De-rotated", x_derotated.real(),
+						             x_derotated.imag(),
+						             "Data");
+						debug_printf("Phase Error: %4.2f\n", phi_error);
 
-      // Tell runtime system how many output items we produced.
-      return n_produced;
-    }
+						j++;
+						i++;
+					}
 
-    /*
-     * Symbol slicing
-     */
-    gr_complex da_carrier_phase_rec_impl::slice_symbol(const gr_complex &sample, int M)
-    {
-      // BPSK
-      if (M == 2) {
-        if (sample.real() > 0) {
-          return gr_complex(1,0);
-        } else {
-          return gr_complex(-1,0);
-        }
-        // QPSK
-      } else if (M == 4) {
-        // Search for the correct quadrant and slice
-        if (sample.imag() >= 0) {
-          if (sample.real() >= 0) {
-            return gr_complex(0.7071068,0.7071068);
-          } else {
-            return gr_complex(-0.7071068,0.7071068);
-          }
-        } else {
-          if (sample.real() >= 0) {
-            return gr_complex(0.7071068,-0.7071068);
-          } else {
-            return gr_complex(-0.7071068,-0.7071068);
-          }
-        }
-      } else {
-        return gr_complex(0,0);
-      }
-    }
+					if (j == d_payload_len)
+						break;
 
-  } /* namespace blocksat */
+					/* Tracking symbols */
+					for (int k = 0; k < d_tracking_len; k++) {
+						/* NCO */
+						x_derotated = rx_sym_in[i] * gr_expj(-d_nco_phase);
+
+						/* DA phase error detector  */
+						phi_error = (x_derotated.imag() *
+						             d_tracking_syms[k].real()) -
+							(x_derotated.real() *
+							 d_tracking_syms[k].imag());
+
+						/* PI loop update */
+						loop_step(phi_error);
+
+						/* Debug */
+						debug_printf("%s: In #%4u\t%4.2f + j%4.2f\t", __func__,
+						             j + d_preamble_len, rx_sym_in[i].real(),
+						             rx_sym_in[i].imag());
+						debug_printf("%6s\t%4.2f + j%4.2f\t%6s\t#%d\t%4.2f + j%4.2f\t",
+						             "De-rotated", x_derotated.real(),
+						             x_derotated.imag(),
+						             "Pilot", k,
+						             d_tracking_syms[k].real(),
+						             d_tracking_syms[k].imag());
+						debug_printf("Phase Error: %4.2f\n", phi_error);
+
+						j++;
+						i++;
+					}
+				}
+			}
+
+			debug_printf("%s: n_consumed\t%d\n", __func__, n_consumed);
+			debug_printf("%s: n_produced\t%d\n", __func__, n_produced);
+
+			// Always consume the same amount from both inputs
+			consume_each(n_consumed);
+
+			// Tell runtime system how many output items we produced.
+			return n_produced;
+		}
+	} /* namespace blocksat */
 } /* namespace gr */

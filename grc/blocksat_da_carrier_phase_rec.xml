@@ -4,12 +4,8 @@
   <key>blocksat_da_carrier_phase_rec</key>
   <category>[Blockstream Satellite]/Synchronizers</category>
   <import>import blocksat</import>
-  <make>blocksat.da_carrier_phase_rec($preamble_syms, $noise_bw, $damp_factor, $M, $data_aided, $reset_per_frame)</make>
-  <!-- Make one 'param' node for every Parameter you want settable from the GUI.
-       Sub-nodes:
-       * name
-       * key (makes the value accessible as $keyname, e.g. in the make node)
-       * type -->
+  <make>blocksat.da_carrier_phase_rec($preamble_syms, $noise_bw, $damp_factor,
+  $M, $data_aided, $reset_per_frame, $tracking_syms, $tracking_interval, $frame_len)</make>
   <param>
     <name>Preamble Symbols</name>
     <key>preamble_syms</key>
@@ -35,12 +31,12 @@
     <key>data_aided</key>
     <type>enum</type>
     <option>
-      <name>Data-aided</name>
+      <name>Data-aided Only</name>
       <key>True</key>
       <opt>type:bool</opt>
     </option>
     <option>
-      <name>Decision-directed</name>
+      <name>Data + Decision</name>
       <key>False</key>
       <opt>type:bool</opt>
     </option>
@@ -59,11 +55,21 @@
       <key>False</key>
     </option>
   </param>
-  <!-- Make one 'sink' node per input. Sub-nodes:
-       * name (an identifier for the GUI)
-       * type
-       * vlen
-       * optional (set to 1 for optional inputs) -->
+  <param>
+    <name>Tracking Symbols</name>
+    <key>tracking_syms</key>
+    <type>complex_vector</type>
+  </param>
+  <param>
+    <name>Tracking Interval</name>
+    <key>tracking_interval</key>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Frame Length</name>
+    <key>frame_len</key>
+    <type>int</type>
+  </param>
   <sink>
     <name>sym_in</name>
     <type>complex</type>
@@ -72,12 +78,6 @@
     <name>is_preamble</name>
     <type>byte</type>
   </sink>
-
-  <!-- Make one 'source' node per output. Sub-nodes:
-       * name (an identifier for the GUI)
-       * type
-       * vlen
-       * optional (set to 1 for optional inputs) -->
   <source>
     <name>sym_out</name>
     <type>complex</type>
