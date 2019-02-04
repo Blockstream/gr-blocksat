@@ -40,6 +40,9 @@ uninstall:
 	rm -f $(BUILD_RC)
 	$(MAKE) -C $(BUILD_DIR) uninstall
 
+test:
+	$(MAKE) -C $(BUILD_DIR) test
+
 # Re-build Hierarchical Blocks
 # NOTE: the hierarchical blocks are pre-built in the repository due to the fact
 # that the top-level Python modules that they generate have been
