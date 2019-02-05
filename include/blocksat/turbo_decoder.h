@@ -46,7 +46,7 @@ namespace gr {
 			 * class. blocksat::turbo_decoder::make is the public interface for
 			 * creating new instances.
 			 */
-			static sptr make(int N, int K, int n_ite);
+			static sptr make(int N, int K, int n_ite, bool flip_llrs);
 		};
 
 	} // namespace blocksat

@@ -45,11 +45,16 @@ namespace gr {
 			// Nothing to declare in this block.
 			module::Encoder_RSC_generic_sys<B_8> *sub_enc;
 			module::Decoder_RSC_BCJR_seq_very_fast
-			<B_8,Q_8,QD_8,tools::max<Q_8>,tools::max<QD_8>> * sub_dec;
+			<int,float,float,tools::max<float>,tools::max<float>> * sub_dec;
 			module::Interleaver_LTE<int> *interleaver;
-			module::Decoder_turbo_fast<B_8,Q_8> *dec;
-			int d_input_size  ;
-			int d_output_size ;
+			module::Decoder_turbo_fast<int, float> *dec;
+			float *d_llr_buffer;
+			int *d_int_buffer;
+			bool d_flip_llrs;
+			int d_N;
+			int d_K;
+			int d_input_size;
+			int d_output_size;
 
 		public:
 			/*!
@@ -57,8 +62,9 @@ namespace gr {
 			 * \param N codeword length
 			 * \param K dataword length
 			 * \param n_ite maximum number of iterations
+			 * \param flip_llrs Invert the sign of the input LLRs
 			 */
-			turbo_decoder_impl(int N, int K, int n_ite);
+			turbo_decoder_impl(int N, int K, int n_ite, bool flip_llrs);
 			~turbo_decoder_impl();
 
 			// Where all the action really happens

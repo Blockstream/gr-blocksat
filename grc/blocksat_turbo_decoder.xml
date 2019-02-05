@@ -4,7 +4,7 @@
   <key>blocksat_turbo_decoder</key>
   <category>[Blockstream Satellite]/Error Coding</category>
   <import>import blocksat</import>
-  <make>blocksat.turbo_decoder($N, $K, $n_ite)</make>
+  <make>blocksat.turbo_decoder($N, $K, $n_ite, $flip_llrs)</make>
   <param>
     <name>dataword_len</name>
     <key>K</key>
@@ -20,9 +20,23 @@
     <key>n_ite</key>
     <type>int</type>
   </param>
+  <param>
+    <name>Flip LLRs</name>
+    <key>flip_llrs</key>
+    <value>False</value>
+    <type>bool</type>
+    <option>
+      <name>Yes</name>
+      <key>True</key>
+    </option>
+    <option>
+      <name>No</name>
+      <key>False</key>
+    </option>
+  </param>
   <sink>
     <name>in</name>
-    <type>byte</type>
+    <type>float</type>
   </sink>
   <source>
     <name>out</name>
