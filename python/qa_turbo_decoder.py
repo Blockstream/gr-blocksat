@@ -104,9 +104,11 @@ class qa_turbo_decoder (gr_unittest.TestCase):
         N         = 18444
         K         = 6144
         n_ite     = 6
+        M         = 2
         snr_db    = SNR_DB
         max_len   = 10*K
-        flip_llrs = True
+        flip_llrs = False
+        sym_rate  = 2*156250
 
         # NOTE: The soft decoder block outputs positive LLR if bit "1" is more
         # likely, and negative LLR otherwise (bit = 0). That is, the soft
@@ -128,7 +130,7 @@ class qa_turbo_decoder (gr_unittest.TestCase):
         cmap    = digital.chunks_to_symbols_bc(const.points())
         nadder  = blocks.add_cc()
         noise   = analog.noise_source_c(analog.GR_GAUSSIAN, noise_v, 0)
-        cdemap  = digital.constellation_soft_decoder_cf(const)
+        cdemap  = blocksat.soft_decoder_cf(M, noise_v)
         dec     = blocksat.turbo_decoder(N, K, n_ite, flip_llrs);
         snk     = blocks.vector_sink_b()
         snk_sym = blocks.vector_sink_c()
@@ -161,9 +163,11 @@ class qa_turbo_decoder (gr_unittest.TestCase):
         N         = 18444
         K         = 6144
         n_ite     = 6
+        M         = 4
         snr_db    = SNR_DB
         max_len   = 10*K
-        flip_llrs = True
+        flip_llrs = False
+        sym_rate  = 2*156250
 
         # NOTE: just like in the previous example, flipping of the LLRs is
         # necessary here.
@@ -183,7 +187,7 @@ class qa_turbo_decoder (gr_unittest.TestCase):
         cmap    = digital.chunks_to_symbols_bc(const.points())
         nadder  = blocks.add_cc()
         noise   = analog.noise_source_c(analog.GR_GAUSSIAN, noise_v, 0)
-        cdemap  = digital.constellation_soft_decoder_cf(const)
+        cdemap  = blocksat.soft_decoder_cf(M, noise_v)
         dec     = blocksat.turbo_decoder(N, K, n_ite, flip_llrs);
         snk     = blocks.vector_sink_b()
         snk_sym = blocks.vector_sink_c()
