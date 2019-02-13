@@ -51,3 +51,4 @@ GR_ADD_TEST(qa_protocol_sink ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa
 GR_ADD_TEST(qa_turbo_decoder ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_turbo_decoder.py)
 GR_ADD_TEST(qa_mer_measurement ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_mer_measurement.py)
 GR_ADD_TEST(qa_da_carrier_phase_rec ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_da_carrier_phase_rec.py)
+GR_ADD_TEST(qa_soft_decoder_cf ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_soft_decoder_cf.py)

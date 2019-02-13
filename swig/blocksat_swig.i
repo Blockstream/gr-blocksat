@@ -17,6 +17,7 @@
 #include "blocksat/exponentiate_const_cci.h"
 #include "blocksat/runtime_cfo_ctrl.h"
 #include "blocksat/argpeak.h"
+#include "blocksat/soft_decoder_cf.h"
 %}
 
 
@@ -38,3 +39,5 @@ GR_SWIG_BLOCK_MAGIC2(blocksat, exponentiate_const_cci);
 GR_SWIG_BLOCK_MAGIC2(blocksat, runtime_cfo_ctrl);
 %include "blocksat/argpeak.h"
 GR_SWIG_BLOCK_MAGIC2(blocksat, argpeak);
+%include "blocksat/soft_decoder_cf.h"
+GR_SWIG_BLOCK_MAGIC2(blocksat, soft_decoder_cf);

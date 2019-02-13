@@ -45,6 +45,7 @@ list(APPEND blocksat_sources
     aff3ct/length_error.cpp
     aff3ct/runtime_error.cpp
     aff3ct/unimplemented_error.cpp
+    soft_decoder_cf_impl.cc
 )
 #		bash_tools.cpp
 #		cannot_allocate.cpp
