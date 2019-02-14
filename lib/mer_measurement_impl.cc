@@ -27,7 +27,10 @@
 #endif
 
 #include <gnuradio/io_signature.h>
+#include <gnuradio/math.h>
 #include "mer_measurement_impl.h"
+
+#define SQRT_TWO 0.7071068f
 
 namespace gr {
   namespace blocksat {
@@ -53,6 +56,27 @@ namespace gr {
         d_snr_db(0.0)
     {
       d_delay_line.resize(N);
+
+      /* Define BPSK and QPSK constellations in one single vector */
+      d_constellation[0] = gr_complex(-1, 0);
+      d_constellation[1] = gr_complex(1, 0);
+      d_constellation[2] = gr_complex(-SQRT_TWO, -SQRT_TWO);
+      d_constellation[3] = gr_complex(SQRT_TWO, -SQRT_TWO);
+      d_constellation[4] = gr_complex(-SQRT_TWO, SQRT_TWO);
+      d_constellation[5] = gr_complex(SQRT_TWO, SQRT_TWO);
+
+      /* For branchless decoding, use the offset and mask defined beloe in order
+       * to index the constellation */
+      if (M == 4)
+      {
+        d_im_mask          = 0x1;
+        d_const_offset     = 2;
+      }
+      else if (M == 2)
+      {
+        d_im_mask          = 0;
+        d_const_offset     = 0;
+      }
     }
 
     /*
@@ -84,8 +108,8 @@ namespace gr {
           d_i_sym++;
         }
 
-        // Slice the symbol
-        Ik = slice_symbol(in[i]);
+        // Slice the BPSK or QPSK symbol
+        slice_symbol(&in[i], &Ik);
 
         // Symbol error:
         sym_err_k = Ik - in[i];
@@ -134,32 +158,13 @@ namespace gr {
       return noutput_items;
     }
 
-    gr_complex mer_measurement_impl::slice_symbol(const gr_complex &sample)
+    inline void mer_measurement_impl::slice_symbol(const gr_complex *in,
+                                                   gr_complex *out)
     {
-      // BPSK
-      if (d_M == 2) {
-        if (sample.real() > 0) {
-          return gr_complex(1,0);
-        } else {
-          return gr_complex(-1,0);
-        }
-      // QPSK
-      } else if (d_M == 4) {
-        if (sample.imag() >= 0 and sample.real() >= 0) {
-          return gr_complex(0.7071068,0.7071068);
-        }
-        else if (sample.imag() >= 0 and sample.real() < 0) {
-          return gr_complex(-0.7071068,0.7071068);
-        }
-        else if (sample.imag() < 0 and sample.real() < 0) {
-          return gr_complex(-0.7071068,-0.7071068);
-        }
-        else if (sample.imag() < 0 and sample.real() >= 0) {
-          return gr_complex(0.7071068,-0.7071068);
-        }
-      } else {
-        return gr_complex(0,0);
-      }
+      int xre = branchless_binary_slicer(in->real());
+      int xim = branchless_binary_slicer(in->imag());
+      xim    &= d_im_mask; // throw away the imaginary part for BPSK
+      *out    = d_constellation[((xim) << 1) + xre + d_const_offset];
     }
 
     /*
