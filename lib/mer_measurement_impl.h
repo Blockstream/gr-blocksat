@@ -31,9 +31,9 @@ namespace gr {
      private:
        int d_N;
        int d_M;
-       int d_i_sym;
-       float d_e_sum;
-       std::vector<float> d_delay_line;
+       float d_alpha;
+       float d_beta;
+       float d_avg_err;
        gr_complex d_constellation[6];
        float d_snr_db;
        int d_im_mask;
@@ -41,7 +41,7 @@ namespace gr {
        void slice_symbol(const gr_complex *in, gr_complex *out);
 
      public:
-      mer_measurement_impl(int N, int M);
+      mer_measurement_impl(float alpha, int M);
       ~mer_measurement_impl();
 
       // Where all the action really happens
@@ -49,8 +49,9 @@ namespace gr {
          gr_vector_const_void_star &input_items,
          gr_vector_void_star &output_items);
 
-      // Public metrics
+      // Public getters/setters
       float get_snr();
+      void set_alpha(float alpha);
     };
 
   } // namespace blocksat

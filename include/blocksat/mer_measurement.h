@@ -39,16 +39,14 @@ namespace gr {
       typedef boost::shared_ptr<mer_measurement> sptr;
 
       /*!
-       * \brief Return a shared_ptr to a new instance of blocksat::mer_measurement.
-       *
-       * To avoid accidental use of raw pointers, blocksat::mer_measurement's
-       * constructor is in a private implementation
-       * class. blocksat::mer_measurement::make is the public interface for
-       * creating new instances.
+       * \brief Make the modulation error ratio (MER) measurement instance
+       * \param alpha IIR-based averaging alpha
+       * \param M constellation order
        */
-      static sptr make(int N, int M);
+      static sptr make(float alpha, int M);
 
       virtual float get_snr() = 0;
+      virtual void set_alpha(float alpha) = 0;
     };
 
   } // namespace blocksat

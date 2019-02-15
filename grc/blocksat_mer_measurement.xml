@@ -4,38 +4,24 @@
   <key>blocksat_mer_measurement</key>
   <category>[Blockstream Satellite]/Measurement Tools</category>
   <import>import blocksat</import>
-  <make>blocksat.mer_measurement($N, $M)</make>
+  <make>blocksat.mer_measurement($alpha, $M)</make>
   <callback>get_snr()</callback>
-  <!-- Make one 'param' node for every Parameter you want settable from the GUI.
-       Sub-nodes:
-       * name
-       * key (makes the value accessible as $keyname, e.g. in the make node)
-       * type -->
+  <callback>set_alpha($alpha)</callback>
   <param>
-    <name>Averaging Length</name>
-    <key>N</key>
-    <type>int</type>
+    <name>Averaging Alpha</name>
+    <key>alpha</key>
+    <value>0.0001</value>
+    <type>float</type>
   </param>
   <param>
     <name>Constellation Order</name>
     <key>M</key>
     <type>int</type>
   </param>
-  <!-- Make one 'sink' node per input. Sub-nodes:
-       * name (an identifier for the GUI)
-       * type
-       * vlen
-       * optional (set to 1 for optional inputs) -->
   <sink>
     <name>sym_in</name>
     <type>complex</type>
   </sink>
-
-  <!-- Make one 'source' node per output. Sub-nodes:
-       * name (an identifier for the GUI)
-       * type
-       * vlen
-       * optional (set to 1 for optional inputs) -->
   <source>
     <name>mer</name>
     <type>float</type>

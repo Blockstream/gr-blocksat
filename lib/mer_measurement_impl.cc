@@ -36,26 +36,23 @@ namespace gr {
   namespace blocksat {
 
     mer_measurement::sptr
-    mer_measurement::make(int N, int M)
+    mer_measurement::make(float alpha, int M)
     {
       return gnuradio::get_initial_sptr
-        (new mer_measurement_impl(N, M));
+        (new mer_measurement_impl(alpha, M));
     }
 
     /*
      * The private constructor
      */
-    mer_measurement_impl::mer_measurement_impl(int N, int M)
+    mer_measurement_impl::mer_measurement_impl(float alpha, int M)
       : gr::sync_block("mer_measurement",
               gr::io_signature::make(1, 1, sizeof(gr_complex)),
               gr::io_signature::make(1, 1, sizeof(float))),
-        d_N(N), // Averaging length
         d_M(M), // Constellation Order
-        d_i_sym(0), // Symbol index used to keep track of the transitory
-        d_e_sum(0.0), // Symbol mag sq. error sum
         d_snr_db(0.0)
     {
-      d_delay_line.resize(N);
+      set_alpha(alpha);
 
       /* Define BPSK and QPSK constellations in one single vector */
       d_constellation[0] = gr_complex(-1, 0);
@@ -94,20 +91,13 @@ namespace gr {
       const gr_complex *in = (const gr_complex *) input_items[0];
       float *out = (float *) output_items[0];
       gr_complex Ik, sym_err_k;
-      float e_sum, e_k, e_k_last;
+      float e_k;
       float lin_mer;
-
-      gr_complex origin = gr_complex(0,0);
 
       // Perform ML decoding over the input iq data to generate alphabets
       int i;
       for(i = 0; i < noutput_items; i++)
       {
-        // Keep track of the initialization transitory
-        if (d_i_sym < d_N) {
-          d_i_sym++;
-        }
-
         // Slice the BPSK or QPSK symbol
         slice_symbol(&in[i], &Ik);
 
@@ -117,25 +107,13 @@ namespace gr {
         // mag Sq. of the error
         e_k = (sym_err_k.real()*sym_err_k.real()) + (sym_err_k.imag()*sym_err_k.imag());
 
-        // Output the last mag sq error within the delay line
-        e_k_last = d_delay_line.back();
-        // Throw it away (pop) from the vector
-        d_delay_line.pop_back();
-        // Shift the delay line and put the new mag sq. in
-        d_delay_line.insert(d_delay_line.begin(), e_k);
-
-        // Update the sum of the past N mag sq. errors
-        if (d_i_sym < d_N) {
-          d_e_sum = d_e_sum + e_k;
-        } else {
-          d_e_sum = d_e_sum + (e_k - e_k_last);
-        }
+        // average magnitude squared error
+        d_avg_err = d_beta*d_avg_err + d_alpha*e_k;
 
         // Resulting linear MER
-        lin_mer = float(d_N) / d_e_sum;
-        // The numerator should be the sum of the magnitude squared of the ideal
-        // symbols for the past N symbols. However, since unitary magnitude is
-        // assumed, the sum is simply equal to N.
+        lin_mer = 1.0f / d_avg_err;
+        /* The numerator should be Es, i.e. the average magnitude squared of the
+         * ideal symbols, but it is assumed unitary. */
 
         // Output MER in dB
         out[i] = 10.0*log10(lin_mer);
@@ -148,8 +126,7 @@ namespace gr {
         // printf("Sliced \t Real:\t %f\t Imag:\t %f\n", Ik.real(), Ik.imag());
         // printf("Error \t Real:\t %f\t Imag:\t %f\n", sym_err_k.real(), sym_err_k.imag());
         // printf("Mag Sq. Error \t %f \n", e_k);
-        // printf("Popped Mag Sq. Error \t %f \n", e_k_last);
-        // printf("Sum Mag Sq. Error \t %f \n", e_sum);
+        // printf("Avg Error \t %f \n", d_avg_err);
         // printf("Linear MER \t %f \n", lin_mer);
         // printf("dB MER \t %f \n", out[i]);
       }
@@ -165,6 +142,16 @@ namespace gr {
       int xim = branchless_binary_slicer(in->imag());
       xim    &= d_im_mask; // throw away the imaginary part for BPSK
       *out    = d_constellation[((xim) << 1) + xre + d_const_offset];
+    }
+
+    /*
+     * Set the averaging alpha
+     */
+    void mer_measurement_impl::set_alpha(float alpha)
+    {
+      d_alpha   = alpha;
+      d_beta    = 1 - d_alpha;
+      d_avg_err = 0;
     }
 
     /*
