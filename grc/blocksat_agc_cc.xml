@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<block>
+	<name>AGC</name>
+	<key>blocksat_agc_cc</key>
+	<category>[Blockstream Satellite]/Level Controllers</category>
+	<import>import blocksat</import>
+	<make>blocksat.agc_cc($rate, $reference, $gain, $max_gain)</make>
+	<callback>set_rate($rate)</callback>
+	<callback>set_reference($reference)</callback>
+	<callback>set_gain($gain)</callback>
+	<callback>set_max_gain($max_gain)</callback>
+	<param>
+		<name>Rate</name>
+		<key>rate</key>
+		<value>1e-4</value>
+		<type>real</type>
+	</param>
+	<param>
+		<name>Reference</name>
+		<key>reference</key>
+		<value>1.0</value>
+		<type>real</type>
+	</param>
+	<param>
+		<name>Gain</name>
+		<key>gain</key>
+		<value>1.0</value>
+		<type>real</type>
+	</param>
+	<param>
+		<name>Max Gain</name>
+		<key>max_gain</key>
+		<value>65536</value>
+		<type>real</type>
+	</param>
+	<sink>
+		<name>in</name>
+		<type>complex</type>
+	</sink>
+	<source>
+		<name>out</name>
+		<type>complex</type>
+	</source>
+	<source>
+		<name>level</name>
+		<type>float</type>
+		<optional>1</optional>
+	</source>
+</block>
