@@ -27,10 +27,7 @@
 #endif
 
 #include <gnuradio/io_signature.h>
-#include <gnuradio/math.h>
 #include "mer_measurement_impl.h"
-
-#define SQRT_TWO 0.7071068f
 
 namespace gr {
   namespace blocksat {
@@ -50,30 +47,10 @@ namespace gr {
               gr::io_signature::make(1, 1, sizeof(gr_complex)),
               gr::io_signature::make(1, 1, sizeof(float))),
         d_M(M), // Constellation Order
-        d_snr_db(0.0)
+        d_snr_db(0.0),
+        d_const(M)
     {
       set_alpha(alpha);
-
-      /* Define BPSK and QPSK constellations in one single vector */
-      d_constellation[0] = gr_complex(-1, 0);
-      d_constellation[1] = gr_complex(1, 0);
-      d_constellation[2] = gr_complex(-SQRT_TWO, -SQRT_TWO);
-      d_constellation[3] = gr_complex(SQRT_TWO, -SQRT_TWO);
-      d_constellation[4] = gr_complex(-SQRT_TWO, SQRT_TWO);
-      d_constellation[5] = gr_complex(SQRT_TWO, SQRT_TWO);
-
-      /* For branchless decoding, use the offset and mask defined beloe in order
-       * to index the constellation */
-      if (M == 4)
-      {
-        d_im_mask          = 0x1;
-        d_const_offset     = 2;
-      }
-      else if (M == 2)
-      {
-        d_im_mask          = 0;
-        d_const_offset     = 0;
-      }
     }
 
     /*
@@ -99,7 +76,7 @@ namespace gr {
       for(i = 0; i < noutput_items; i++)
       {
         // Slice the BPSK or QPSK symbol
-        slice_symbol(&in[i], &Ik);
+        d_const.slice(&in[i], &Ik);
 
         // Symbol error:
         sym_err_k = Ik - in[i];
@@ -133,15 +110,6 @@ namespace gr {
 
       // Tell runtime system how many output items we produced.
       return noutput_items;
-    }
-
-    inline void mer_measurement_impl::slice_symbol(const gr_complex *in,
-                                                   gr_complex *out)
-    {
-      int xre = branchless_binary_slicer(in->real());
-      int xim = branchless_binary_slicer(in->imag());
-      xim    &= d_im_mask; // throw away the imaginary part for BPSK
-      *out    = d_constellation[((xim) << 1) + xre + d_const_offset];
     }
 
     /*

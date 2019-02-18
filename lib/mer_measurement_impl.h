@@ -22,6 +22,7 @@
 #define INCLUDED_BLOCKSAT_MER_MEASUREMENT_IMPL_H
 
 #include <blocksat/mer_measurement.h>
+#include "constellation.h"
 
 namespace gr {
   namespace blocksat {
@@ -34,11 +35,8 @@ namespace gr {
        float d_alpha;
        float d_beta;
        float d_avg_err;
-       gr_complex d_constellation[6];
        float d_snr_db;
-       int d_im_mask;
-       int d_const_offset;
-       void slice_symbol(const gr_complex *in, gr_complex *out);
+       Constellation d_const;
 
      public:
       mer_measurement_impl(float alpha, int M);
