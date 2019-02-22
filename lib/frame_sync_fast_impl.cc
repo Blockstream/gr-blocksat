@@ -30,6 +30,8 @@
 #include <ctime>
 #include "frame_sync_fast_impl.h"
 
+#undef DEBUG_PHASE_CORR
+
 #define DEBUG_LOG 0
 #define AVG_LEN 200
 #define FRAME_ACQUIRED_CNT 50
@@ -48,6 +50,8 @@ void __debug_log(const char* fmt, ...)
   va_end(args);
   #endif
 }
+
+#define SQRT_TWO_O_TWO 0.7071068f
 
 namespace gr {
   namespace blocksat {
@@ -203,7 +207,17 @@ namespace gr {
         is_peak = 1;
         d_last_mag_peak = abs(d_pmf_at_last_max);
         d_eq_gain = 1.0 / d_last_mag_peak;
-        d_phase_rot = resolve_phase(d_pmf_at_last_max.real(), d_pmf_at_last_max.imag());
+        gr_complex new_phase = resolve_phase(&d_pmf_at_last_max);
+
+#ifdef DEBUG_PHASE_CORR
+        if (new_phase.real() != d_phase_rot.real() ||
+            new_phase.imag() != d_phase_rot.imag())
+        {
+          printf("New Phase Rotation at %d - Real:\t %f\t Imag:\t %f\n",
+                 d_i_sym, new_phase.real(), new_phase.imag());
+        }
+#endif
+        d_phase_rot = new_phase;
 
         // Reset
         d_last_max = 0.0;
@@ -223,42 +237,35 @@ namespace gr {
 
     /*
      * Resolve phase ambiguity based on sign of complex PMF peak
+     *
+     *   - Blue positive peak: do not rotate
+     *   - Red positive peak: rotate by 90 degrees
+     *   - Blue negative peak: rotate by 180 degrees
+     *   - Red negative peak: rotate by -90 degrees
      */
-    gr_complex frame_sync_fast_impl::resolve_phase(float pmf_peak_re, float pmf_peak_im) {
-      double phase_corr;
+    gr_complex frame_sync_fast_impl::resolve_phase(gr_complex * pmf_peak) {
+      float phase_corr;
       gr_complex phase_change;
 
-      if (d_const_order == 4) {
-        if (pmf_peak_re > 0 && fabs(pmf_peak_im) < 0.1) {
-          // Blue positive peak
-          // Carrier Phase Loop does not rotate
-          phase_corr = 0.0;
-        } else if (fabs(pmf_peak_re) < 0.1 && pmf_peak_im > 0) {
-          // Red positive peak
-          // Carrier Phase Loop rotates by 90 degrees
-          phase_corr = M_PI/2;
-        } else if (pmf_peak_re < 0 && fabs(pmf_peak_im) < 0.1) {
-          // Blue negative peak
-          // Carrier Phase Loop rotates by 180 degrees
-          phase_corr = -M_PI;
-        } else if (fabs(pmf_peak_re) < 0.1 && pmf_peak_im < 0) {
-          // Red negative peak
-          // Carrier Phase Loop rotates by -90 degrees
-          phase_corr = -M_PI/2;
-        } else {
-          phase_corr = 0.0;
-        }
-      } else if (d_const_order == 2) {
-        if (pmf_peak_re > 0) {
-          phase_corr = 0.0;
-        } else {
-          phase_corr = -M_PI;
-        }
-      } else {
-        phase_corr = 0.0;
-      }
+      /* Rotate the PMF peak by +45 degrees
+       *
+       * For QPSK, the PMF peak is like a 45-degree rotated constellation, i.e.
+       * composed by symbols (+1,0), (0, +1), (-1, 0) and (0, -1). Hence, rotate
+       * it by 45 degrees and apply the QPSK slicing strategy.
+       **/
+      gr_complex rot_pmf_peak = *pmf_peak * gr_complex(SQRT_TWO_O_TWO,
+                                                       SQRT_TWO_O_TWO);
 
+      int xre             = branchless_binary_slicer(rot_pmf_peak.real());
+      int xim             = branchless_binary_slicer(rot_pmf_peak.imag());
+      int im_mask         = d_const_order >> 2; // 0 for BPSK, 1 for QPSK
+      int lut_idx_offset  = (d_const_order == 4) ? 2 : 0;
+      xim                &= im_mask; // throw away the imaginary part for BPSK
 
+      /* Get the phase correction from a LUT */
+      phase_corr = d_phase_corr_lut[((xim) << 1) + xre + lut_idx_offset];
+
+      /* Return the complex number that corrects this phase */
       phase_change = gr_complex(cos(phase_corr), -sin(phase_corr));
 
       return phase_change;
