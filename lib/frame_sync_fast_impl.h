@@ -62,6 +62,14 @@ namespace gr {
       std::vector<gr_complex> d_delay_line;
       std::vector<int> d_peak_dist_hist;
       std::vector<float> d_central_diff;
+      const float d_phase_corr_lut[6] = {
+        -M_PI,
+        0.0,
+        -M_PI,
+        -M_PI/2,
+        M_PI/2,
+        0.0
+      };
 
       // Internal processing
       void mov_max_timing_metric(float timing_metric, gr_complex norm_c_pmf);
@@ -70,7 +78,7 @@ namespace gr {
       int check_frame_part(int is_peak);
       int verify_frame_acquisition(int d_peak);
       int verify_frame_lock_loss(int is_pmf_peak);
-      gr_complex resolve_phase(float pmf_peak_re, float pmf_peak_im);
+      gr_complex resolve_phase(gr_complex *pmf_peak);
 
 
     public:
