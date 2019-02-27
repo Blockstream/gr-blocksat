@@ -41,6 +41,7 @@ list(APPEND blocksat_sources
     aff3ct/Decoder_NO.cpp
     aff3ct/Decoder_turbo.cpp
     aff3ct/Decoder_turbo_fast.cpp
+    aff3ct/Puncturer_turbo.cpp
     aff3ct/exception.cpp
     aff3ct/invalid_argument.cpp
     aff3ct/length_error.cpp

@@ -33,6 +33,7 @@
 #include "Module/Decoder/Turbo/Decoder_turbo.hpp"
 #include "Module/Decoder/RSC/BCJR/Seq/Decoder_RSC_BCJR_seq_very_fast.hpp"
 #include "Module/Decoder/Turbo/Decoder_turbo_fast.hpp"
+#include "Module/Puncturer/Turbo/Puncturer_turbo.hpp"
 
 using namespace aff3ct;
 
@@ -48,23 +49,24 @@ namespace gr {
 			<int,float,float,tools::max<float>,tools::max<float>> * sub_dec;
 			module::Interleaver_LTE<int> *interleaver;
 			module::Decoder_turbo_fast<int, float> *dec;
+			module::Puncturer_turbo<int,float> *pct;
 			float *d_llr_buffer;
 			int *d_int_buffer;
 			bool d_flip_llrs;
 			int d_N;
 			int d_K;
-			int d_input_size;
-			int d_output_size;
+			bool d_pct_en;
+			float *d_pct_buffer;
 
 		public:
 			/*!
 			 * \brief Turbo decoder implementation
-			 * \param N codeword length
 			 * \param K dataword length
+			 * \param pct_en Enable depuncturer
 			 * \param n_ite maximum number of iterations
 			 * \param flip_llrs Invert the sign of the input LLRs
 			 */
-			turbo_decoder_impl(int N, int K, int n_ite, bool flip_llrs);
+			turbo_decoder_impl(int K, bool pct_en, int n_ite, bool flip_llrs);
 			~turbo_decoder_impl();
 
 			// Where all the action really happens

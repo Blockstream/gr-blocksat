@@ -4,16 +4,25 @@
   <key>blocksat_turbo_decoder</key>
   <category>[Blockstream Satellite]/Error Coding</category>
   <import>import blocksat</import>
-  <make>blocksat.turbo_decoder($N, $K, $n_ite, $flip_llrs)</make>
+  <make>blocksat.turbo_decoder($K, $pct_en, $n_ite, $flip_llrs)</make>
   <param>
     <name>dataword_len</name>
     <key>K</key>
     <type>int</type>
   </param>
   <param>
-    <name>codeword_len</name>
-    <key>N</key>
-    <type>int</type>
+    <name>Rate</name>
+    <key>pct_en</key>
+    <value>False</value>
+    <type>bool</type>
+    <option>
+      <name>1/2</name>
+      <key>True</key>
+    </option>
+    <option>
+      <name>1/3</name>
+      <key>False</key>
+    </option>
   </param>
   <param>
     <name>Max Iterations</name>

@@ -28,5 +28,7 @@ install(FILES
 	Decoder/Turbo/Decoder_turbo.hpp
 	Interleaver/Interleaver.hpp
 	Interleaver/LTE/Interleaver_LTE.hpp
+	Puncturer/Puncturer.hpp
+	Puncturer/Turbo/Puncturer_turbo.hpp
 	Module.hpp DESTINATION include/Module
 )

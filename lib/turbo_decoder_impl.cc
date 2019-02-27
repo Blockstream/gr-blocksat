@@ -39,30 +39,51 @@ namespace gr {
 	namespace blocksat {
 
 		turbo_decoder::sptr
-		turbo_decoder::make(int N, int K, int n_ite, bool flip_llrs)
+		turbo_decoder::make(int K, bool pct_en, int n_ite, bool flip_llrs)
 		{
 			return gnuradio::get_initial_sptr
-				(new turbo_decoder_impl(N, K, n_ite, flip_llrs));
+				(new turbo_decoder_impl(K, pct_en, n_ite, flip_llrs));
 		}
 
 		/*
 		 * The private constructor
 		 */
-		turbo_decoder_impl::turbo_decoder_impl(int N, int K, int n_ite,
+		turbo_decoder_impl::turbo_decoder_impl(int K, bool pct_en, int n_ite,
 		                                       bool flip_llrs)
 			: gr::block("turbo_decoder",
 			            gr::io_signature::make(1, 1, sizeof(float)),
-			            gr::io_signature::make(1, 1, sizeof(unsigned char)))
+			            gr::io_signature::make(1, 1, sizeof(unsigned char))),
+			d_pct_en(pct_en),
+			d_K(K)
 		{
-
+			/* Parameters */
 			std::vector<int> poly = {013, 015};
-			int tail_length = (int)(2 * std::floor(std::log2((float)std::max(poly[0], poly[1]))));
-			int N_cw        = 2 * K + tail_length;
+			std::vector<std::vector<bool>> pct_pattern = {{1,1},{1,0},{0,1}};
+			bool buff_enc = true;
+			int n_frames  = 1;
 
+			/* Derived constants */
+			int tail_length_rsc = (int)(2 * std::floor(std::log2((float)std::max(poly[0], poly[1]))));
+			int tail_length_enc = 2 * tail_length_rsc;
+			int N_cw_rsc    = (2 * K) + tail_length_rsc;
+			int N_cw_turbo  = (3 * K) + tail_length_enc;
+			int N           = (pct_en) ? (((K/2) * 4) + (tail_length_enc)) : N_cw_turbo;
+
+			/* Internal configs and buffers */
+			d_N             = N;
+			d_flip_llrs     = flip_llrs;
+			d_llr_buffer    = (float*)volk_malloc(N * sizeof(float),
+			                                      volk_get_alignment());
+			d_int_buffer    = (int*)volk_malloc(K * sizeof(int),
+			                                    volk_get_alignment());
+			d_pct_buffer    = (float*)volk_malloc(N_cw_turbo * sizeof(float),
+			                                      volk_get_alignment());
+
+			/* Modules */
 			interleaver = new module::Interleaver_LTE<int> (K);
 			interleaver->init();
 
-			sub_enc = new module::Encoder_RSC_generic_sys<B_8> (K, N_cw, true, poly);
+			sub_enc = new module::Encoder_RSC_generic_sys<B_8> (K, N_cw_rsc, true, poly);
 			std::vector<std::vector<int>> trellis = sub_enc->get_trellis();
 
 #ifdef DEBUG_DEC
@@ -74,19 +95,20 @@ namespace gr {
 
 			sub_dec = new module::Decoder_RSC_BCJR_seq_very_fast <int,float,float,tools::max<float>,tools::max<float>> (K, trellis);
 
-			dec = new module::Decoder_turbo_fast<int, float>(K, N, n_ite, *interleaver, *sub_dec, *sub_dec);
+			dec = new module::Decoder_turbo_fast<int, float>(K, N_cw_turbo, n_ite, *interleaver, *sub_dec, *sub_dec);
 
+			if (pct_en) {
+				pct = new module::Puncturer_turbo<int,float>(K, N,
+				                                             tail_length_enc,
+				                                             pct_pattern,
+				                                             buff_enc,
+				                                             n_frames);
+			}
+
+			/* GR Block Configurations */
 			set_fixed_rate(true);
 			set_relative_rate((double)K/(double)N);
 			set_output_multiple(K);
-
-			d_N                = N;
-			d_K                = K;
-			d_flip_llrs        = flip_llrs;
-			d_llr_buffer       = (float*)volk_malloc(N * sizeof(float),
-			                                         volk_get_alignment());
-			d_int_buffer       = (int*)volk_malloc(K * sizeof(int),
-			                                       volk_get_alignment());
 		}
 
 		/*
@@ -144,16 +166,24 @@ namespace gr {
 
 			for (int i = 0; i < n_codewords; i++) {
 				if (d_flip_llrs) {
-					// Flip sign of LLRs
 					volk_32f_s32f_multiply_32f(d_llr_buffer,
 					                           inbuffer + (i * d_N),
 					                           -1.0f, d_N);
-					// Decode
-					dec->_decode_siho(d_llr_buffer, d_int_buffer, 0);
+					if (d_pct_en) {
+						pct->depuncture(d_llr_buffer, d_pct_buffer);
+						dec->_decode_siho(d_pct_buffer, d_int_buffer, 0);
+					} else {
+						dec->_decode_siho(d_llr_buffer, d_int_buffer, 0);
+					}
 				} else {
-					// Decode
-					dec->_decode_siho(inbuffer + (i * d_N),
-					                  d_int_buffer, 0);
+					if (d_pct_en) {
+						pct->depuncture(inbuffer + (i * d_N), d_pct_buffer);
+						dec->_decode_siho(d_pct_buffer,
+						                  d_int_buffer, 0);
+					} else {
+						dec->_decode_siho(inbuffer + (i * d_N),
+						                  d_int_buffer, 0);
+					}
 				}
 
 				// Convert int output of the decoder to unsigned char

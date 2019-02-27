@@ -39,14 +39,14 @@ namespace gr {
 			typedef boost::shared_ptr<turbo_decoder> sptr;
 
 			/*!
-			 * \brief Return a shared_ptr to a new instance of blocksat::turbo_decoder.
+			 * \brief Instantiate the Turbo Decoder
 			 *
-			 * To avoid accidental use of raw pointers, blocksat::turbo_decoder's
-			 * constructor is in a private implementation
-			 * class. blocksat::turbo_decoder::make is the public interface for
-			 * creating new instances.
+			 * \param K Dataword length.
+			 * \param pct_en Enable the puncturer for 1/2 code rate
+			 * \param n_ite  Maximum number of decoding iterations
+			 * \param flip_llrs Flip the sign of the input LLRs
 			 */
-			static sptr make(int N, int K, int n_ite, bool flip_llrs);
+			static sptr make(int K, bool pct_en, int n_ite, bool flip_llrs);
 		};
 
 	} // namespace blocksat

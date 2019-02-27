@@ -57,6 +57,7 @@ class qa_turbo_decoder (gr_unittest.TestCase):
         # Parameters
         N         = 18444
         K         = 6144
+        pct_en    = False
         n_ite     = 6
         const     = [1 -1]
         flip_llrs = False
@@ -66,10 +67,10 @@ class qa_turbo_decoder (gr_unittest.TestCase):
 
         # Flowgraph
         src     = blocks.vector_source_b(in_vec)
-        enc     = blocksattx.turbo_encoder(N, K);
+        enc     = blocksattx.turbo_encoder(K, pct_en);
         mapb    = digital.map_bb([1,-1]);
         c2f     = blocks.char_to_float();
-        dec     = blocksat.turbo_decoder(N, K, n_ite, flip_llrs);
+        dec     = blocksat.turbo_decoder(K, pct_en, n_ite, flip_llrs);
         snk     = blocks.vector_sink_b()
         snk_sym = blocks.vector_sink_f()
         snk_llr = blocks.vector_sink_f()
@@ -103,6 +104,7 @@ class qa_turbo_decoder (gr_unittest.TestCase):
         # Parameters
         N         = 18444
         K         = 6144
+        pct_en    = False
         n_ite     = 6
         M         = 2
         snr_db    = SNR_DB
@@ -125,13 +127,13 @@ class qa_turbo_decoder (gr_unittest.TestCase):
 
         # Flowgraph
         src     = blocks.vector_source_b(in_vec)
-        enc     = blocksattx.turbo_encoder(N, K)
+        enc     = blocksattx.turbo_encoder(K, pct_en)
         const   = digital.constellation_bpsk().base()
         cmap    = digital.chunks_to_symbols_bc(const.points())
         nadder  = blocks.add_cc()
         noise   = analog.noise_source_c(analog.GR_GAUSSIAN, noise_v, 0)
         cdemap  = blocksat.soft_decoder_cf(M, noise_v)
-        dec     = blocksat.turbo_decoder(N, K, n_ite, flip_llrs);
+        dec     = blocksat.turbo_decoder(K, pct_en, n_ite, flip_llrs);
         snk     = blocks.vector_sink_b()
         snk_sym = blocks.vector_sink_c()
         snk_llr = blocks.vector_sink_f()
@@ -162,6 +164,7 @@ class qa_turbo_decoder (gr_unittest.TestCase):
         # Parameters
         N         = 18444
         K         = 6144
+        pct_en    = False
         n_ite     = 6
         M         = 4
         snr_db    = SNR_DB
@@ -181,14 +184,14 @@ class qa_turbo_decoder (gr_unittest.TestCase):
 
         # Flowgraph
         src     = blocks.vector_source_b(in_vec)
-        enc     = blocksattx.turbo_encoder(N, K)
+        enc     = blocksattx.turbo_encoder(K, pct_en)
         pack    = blocks.repack_bits_bb(1, 2, "", False, gr.GR_MSB_FIRST)
         const   = digital.constellation_qpsk().base()
         cmap    = digital.chunks_to_symbols_bc(const.points())
         nadder  = blocks.add_cc()
         noise   = analog.noise_source_c(analog.GR_GAUSSIAN, noise_v, 0)
         cdemap  = blocksat.soft_decoder_cf(M, noise_v)
-        dec     = blocksat.turbo_decoder(N, K, n_ite, flip_llrs);
+        dec     = blocksat.turbo_decoder(K, pct_en, n_ite, flip_llrs);
         snk     = blocks.vector_sink_b()
         snk_sym = blocks.vector_sink_c()
         snk_llr = blocks.vector_sink_f()
