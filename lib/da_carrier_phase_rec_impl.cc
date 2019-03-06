@@ -28,12 +28,19 @@
 #include "da_carrier_phase_rec_impl.h"
 
 #undef DEBUG
+#undef DEBUG_DATA
 #undef DEBUG_FORECAST
 
 #ifdef DEBUG
 #define debug_printf printf
 #else
 #define debug_printf(...) if (false) printf(__VA_ARGS__)
+#endif
+
+#ifdef DEBUG_DATA
+#define debug_d_printf printf
+#else
+#define debug_d_printf(...) if (false) printf(__VA_ARGS__)
 #endif
 
 #ifdef DEBUG_FORECAST
@@ -50,13 +57,14 @@ namespace gr {
 		                           float noise_bw, float damp_factor, int M,
 		                           bool data_aided, bool reset_per_frame,
 		                           const std::vector<gr_complex> &tracking_syms,
-		                           int tracking_interval, int frame_len)
+		                           int tracking_interval, int frame_len,
+		                           bool debug_stats)
 		{
 			return gnuradio::get_initial_sptr
 				(new da_carrier_phase_rec_impl(preamble_syms, noise_bw, damp_factor, M,
 				                               data_aided, reset_per_frame,
 				                               tracking_syms, tracking_interval,
-				                               frame_len));
+				                               frame_len, debug_stats));
 		}
 
 		/*
@@ -70,7 +78,7 @@ namespace gr {
 			const std::vector<gr_complex> &preamble_syms, float noise_bw,
 			float damp_factor, int M, bool data_aided, bool reset_per_frame,
 			const std::vector<gr_complex> &tracking_syms, int tracking_interval,
-			int frame_len)
+			int frame_len, bool debug_stats)
 			: gr::block("da_carrier_phase_rec",
 			            io_signature::makev(2, 2, isig),
 			            io_signature::makev(2, 2, osig)),
@@ -83,11 +91,21 @@ namespace gr {
 			d_integrator(0.0),
 			d_tracking_interval(tracking_interval),
 			d_frame_len(frame_len),
-			d_const(M)
+			d_const(M),
+			d_debug_stats(debug_stats),
+			d_alpha(0.001),
+			d_beta(1 - 0.001),
+			d_avg_err(0.0),
+			d_n_sym_err(0.0),
+			d_n_sym_tot(0.0)
 		{
-			d_tx_pilots.resize(preamble_syms.size());
-			d_tx_pilots = preamble_syms;
+			d_preamble_syms.resize(preamble_syms.size());
+			d_preamble_syms = preamble_syms;
 			d_preamble_len  = preamble_syms.size();
+			d_preamble_idxs.resize(d_preamble_len);
+			for (int i = 0; i < d_preamble_len; i++) {
+				d_const.demap(&d_preamble_syms[i], &d_preamble_idxs[i]);
+			}
 			d_payload_len   = d_frame_len - d_preamble_len;
 			d_tracking_syms.resize(tracking_syms.size());
 			d_tracking_syms = tracking_syms;
@@ -207,7 +225,14 @@ namespace gr {
 			gr_complex *rx_sym_out = (gr_complex *) output_items[0];
 			float *error_out = (float *) output_items[1];
 			gr_complex x_derotated, x_sliced;
+			int i_sliced;
 			float phi_error;
+			gr_complex e_k;
+			float norm_e_k;
+			float p_lin_mer, avg_lin_mer, p_db_mer, avg_db_mer;
+			float p_avg_err = 0;
+			int   n_p_sym_err = 0;
+			float p_ser, avg_ser;
 			int n_consumed = 0, n_produced = 0;
 			int n_frames = noutput_items / d_data_len;
 
@@ -246,11 +271,23 @@ namespace gr {
 					x_derotated = rx_sym_in[i] * gr_expj(-d_nco_phase);
 
 					/* DA phase error detector (second term null for BPSK) */
-					phi_error = (x_derotated.imag() * d_tx_pilots[k].real()) -
-						(x_derotated.real() * d_tx_pilots[k].imag());
+					phi_error = (x_derotated.imag() * d_preamble_syms[k].real()) -
+						(x_derotated.real() * d_preamble_syms[k].imag());
 
 					/* PI loop update */
 					loop_step(phi_error);
+
+					/* Preamble stats */
+
+					/* 1) Data-aided MER measurement */
+					e_k        = x_derotated - d_preamble_syms[k];
+					norm_e_k   = (e_k.real() * e_k.real()) + (e_k.imag() * e_k.imag());
+					p_avg_err += norm_e_k;
+					d_avg_err  = (d_beta * d_avg_err) + (d_alpha * norm_e_k);
+
+					/* 2) Uncoded SER */
+					d_const.demap(&x_derotated, &i_sliced);
+					n_p_sym_err += (i_sliced != d_preamble_idxs[k]);
 
 					/* Debug */
 					debug_printf("%s: In #%4u\t%4.2f + j%4.2f\t", __func__, k,
@@ -258,11 +295,33 @@ namespace gr {
 					debug_printf("%6s\t%4.2f + j%4.2f\t%6s\t%4.2f + j%4.2f\t",
 					             "De-rotated", x_derotated.real(),
 					             x_derotated.imag(),
-					             "Preamble", d_tx_pilots[k].real(),
-					             d_tx_pilots[k].imag());
+					             "Preamble", d_preamble_syms[k].real(),
+					             d_preamble_syms[k].imag());
 					debug_printf("Phase Error: %4.2f\n", phi_error);
 
 					i++;
+				}
+
+				/* Finish and print preamble stats
+				 *
+				 * The average MER and SER are computed both for the current
+				 * preamble only and considering all preamble symbols ever
+				 * received.
+				 */
+				if (d_debug_stats) {
+					p_avg_err   /= float(d_preamble_len);  // preamble avg error
+					p_lin_mer    = 1.0f / p_avg_err;       // preamble lin MER
+					avg_lin_mer  = 1.0f / d_avg_err;       // all time avg MER
+					p_avg_err    = 0.0;                    // reset preamble avg
+					p_db_mer     = 10.0*log10(p_lin_mer);   // preamble dB MER
+					avg_db_mer   = 10.0*log10(avg_lin_mer); // all time dB MER
+					d_n_sym_err += float(n_p_sym_err);
+					d_n_sym_tot += float(d_preamble_len);
+					p_ser        = float(n_p_sym_err) / float(d_preamble_len);
+					avg_ser      = d_n_sym_err / d_n_sym_tot;
+					n_p_sym_err  = 0;
+					printf("[Preamble Statistics]\tMER: %4.2f dB (avg %4.2f dB)\tSER: %.2e (avg %.2e)\n",
+					       p_db_mer, avg_db_mer, p_ser, avg_ser);
 				}
 
 				/* Payload */
@@ -303,14 +362,14 @@ namespace gr {
 						n_produced++;
 
 						/* Debug */
-						debug_printf("%s: In #%4u\t%4.2f + j%4.2f\t", __func__,
-						             j + d_preamble_len, rx_sym_in[i].real(),
-						             rx_sym_in[i].imag());
-						debug_printf("%6s\t%4.2f + j%4.2f\t%6s\t",
-						             "De-rotated", x_derotated.real(),
-						             x_derotated.imag(),
-						             "Data");
-						debug_printf("Phase Error: %4.2f\n", phi_error);
+						debug_d_printf("%s: In #%4u\t%4.2f + j%4.2f\t",
+						               __func__, j + d_preamble_len,
+						               rx_sym_in[i].real(),
+						               rx_sym_in[i].imag());
+						debug_d_printf("%6s\t%4.2f + j%4.2f\t%6s\t",
+						               "De-rotated", x_derotated.real(),
+						               x_derotated.imag(), "Data");
+						debug_d_printf("Phase Error: %4.2f\n", phi_error);
 
 						j++;
 						i++;

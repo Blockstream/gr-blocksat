@@ -45,6 +45,7 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
         const_order       = 2
         data_aided_only   = False
         reset_per_frame   = True
+        debug_stats       = False
         tracking_syms     = ((1 + 0j), (1 + 0j), (-1 + 0j), (-1 + 0j))
         tracking_interval = 2
         data_len          = 5
@@ -68,7 +69,8 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
                                                           reset_per_frame,
                                                           tracking_syms,
                                                           tracking_interval,
-                                                          frame_len)
+                                                          frame_len,
+                                                          debug_stats)
         dst1              = blocks.vector_sink_c()
         dst2              = blocks.vector_sink_f()
 
@@ -93,6 +95,7 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
         const_order       = 2
         data_aided_only   = False
         reset_per_frame   = True
+        debug_stats       = False
         tracking_syms     = ((1 + 0j), (1 + 0j), (-1 + 0j), (-1 + 0j))
         tracking_interval = 2
         data_len          = 5
@@ -120,7 +123,8 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
                                                           reset_per_frame,
                                                           tracking_syms,
                                                           tracking_interval,
-                                                          frame_len)
+                                                          frame_len,
+                                                          debug_stats)
         dst1              = blocks.vector_sink_c()
         dst2              = blocks.vector_sink_f()
 
@@ -145,6 +149,7 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
         damp_factor       = 0.707
         data_aided_only   = False
         reset_per_frame   = True
+        debug_stats       = False
         tracking_interval = 20
         data_len          = 100
         n_frames          = 50
@@ -210,7 +215,8 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
                                                           reset_per_frame,
                                                           tracking_syms,
                                                           tracking_interval,
-                                                          frame_len)
+                                                          frame_len,
+                                                          debug_stats)
         dst1              = blocks.vector_sink_c()
         dst2              = blocks.vector_sink_f()
 

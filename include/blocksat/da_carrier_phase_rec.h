@@ -50,7 +50,7 @@ namespace gr {
                        float noise_bw, float damp_factor, int M,
                        bool data_aided, bool reset_per_frame,
                        const std::vector<gr_complex> &tracking_syms,
-                       int tracking_interval, int frame_len);
+                       int tracking_interval, int frame_len, bool debug_stats);
     };
 
   } // namespace blocksat

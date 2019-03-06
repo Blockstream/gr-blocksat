@@ -48,6 +48,12 @@ namespace gr {
 		public:
 			Constellation(int M);
 			~Constellation();
+
+			/*
+			 * \brief Slice a given symbol to the closest constellation point
+			 * \param *in Pointer to the input symbol
+			 * \param *out Pointer to the output symbol
+			 */
 			inline void slice(const gr_complex *in,
 			                  gr_complex *out)
 			{
@@ -55,6 +61,20 @@ namespace gr {
 				int xim = branchless_binary_slicer(in->imag());
 				xim    &= d_im_mask; // throw away the imaginary part for BPSK
 				*out    = d_constellation[((xim) << 1) + xre + d_const_offset];
+			}
+
+			/*
+			 * \brief Demap symbol to the index of the closest point
+			 * \param *in Pointer to the input symbol
+			 * \param *out Pointer to the output index
+			 */
+			inline void demap(const gr_complex *in,
+			                  int *out)
+			{
+				int xre = branchless_binary_slicer(in->real());
+				int xim = branchless_binary_slicer(in->imag());
+				xim    &= d_im_mask; // throw away the imaginary part for BPSK
+				*out    = ((xim) << 1) + xre;
 			}
 		};
 	} // namespace blocksat
