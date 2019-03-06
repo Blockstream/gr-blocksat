@@ -5,7 +5,7 @@
   <category>[Blockstream Satellite]/Synchronizers</category>
   <import>import blocksat</import>
   <make>blocksat.da_carrier_phase_rec($preamble_syms, $noise_bw, $damp_factor,
-  $M, $data_aided, $reset_per_frame, $tracking_syms, $tracking_interval, $frame_len)</make>
+  $M, $data_aided, $reset_per_frame, $tracking_syms, $tracking_interval, $frame_len, $debug_stats)</make>
   <param>
     <name>Preamble Symbols</name>
     <key>preamble_syms</key>
@@ -69,6 +69,12 @@
     <name>Frame Length</name>
     <key>frame_len</key>
     <type>int</type>
+  </param>
+  <param>
+    <name>Debug Stats</name>
+    <key>debug_stats</key>
+    <value>False</value>
+    <type>bool</type>
   </param>
   <sink>
     <name>sym_in</name>

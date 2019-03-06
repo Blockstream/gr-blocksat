@@ -74,7 +74,8 @@ namespace gr {
 			float d_nco_phase;
 			bool d_data_aided;
 			bool d_reset_per_frame;
-			std::vector<gr_complex> d_tx_pilots;
+			std::vector<gr_complex> d_preamble_syms;
+			std::vector<int> d_preamble_idxs;
 			int d_preamble_len;
 			bool d_tracking_en;
 			std::vector<gr_complex> d_tracking_syms;
@@ -86,6 +87,12 @@ namespace gr {
 			int d_frame_len;
 			int d_data_len;
 			Constellation d_const;
+			bool d_debug_stats;
+			float d_alpha;
+			float d_beta;
+			float d_avg_err;
+			float d_n_sym_err;
+			float d_n_sym_tot;
 
 			/*
 			 * \brief Update the PI loop
@@ -105,7 +112,8 @@ namespace gr {
 			                          float noise_bw, float damp_factor, int M,
 			                          bool data_aided, bool reset_per_frame,
 			                          const std::vector<gr_complex> &tracking_syms,
-			                          int tracking_interval, int frame_len);
+			                          int tracking_interval, int frame_len,
+			                          bool debug_stats);
 			~da_carrier_phase_rec_impl();
 
 			// Where all the action really happens
