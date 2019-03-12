@@ -80,10 +80,6 @@
     <name>sym_in</name>
     <type>complex</type>
   </sink>
-  <sink>
-    <name>is_preamble</name>
-    <type>byte</type>
-  </sink>
   <source>
     <name>sym_out</name>
     <type>complex</type>

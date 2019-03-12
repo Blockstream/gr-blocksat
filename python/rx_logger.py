@@ -79,7 +79,7 @@ def print_frame_sync(block_obj, label_setter):
 
     # Get data from the frame synchronizer block
     state            = block_obj.get_state()
-    timing_indicator = block_obj.get_timing_rec_indicator()
+    timing_indicator = block_obj.get_mag_pmf_peak()
 
     # Print
     sys.stdout.write("----------------------------------------")
@@ -87,10 +87,10 @@ def print_frame_sync(block_obj, label_setter):
     sys.stdout.write("[" + time.strftime("%Y-%m-%d %H:%M:%S") + "] ")
     sys.stdout.write("Frame Timing => ")
 
-    if (state == 0):
-        state_str = "SEARCHING"
-    else:
+    if (state):
         state_str = "LOCKED"
+    else:
+        state_str = "SEARCHING"
 
     sys.stdout.write(state_str)
 
@@ -100,9 +100,9 @@ def print_frame_sync(block_obj, label_setter):
 
     sys.stdout.write("\t Timing Indicator: ")
 
-    if (timing_indicator > 200):
+    if (timing_indicator > 90.0/130):
         level = "STRONG"
-    elif (timing_indicator > 100):
+    elif (timing_indicator > 30.0/130):
         level = "GOOD"
     else:
         level = "WEAK"

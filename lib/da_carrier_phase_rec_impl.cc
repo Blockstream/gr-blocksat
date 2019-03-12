@@ -70,8 +70,6 @@ namespace gr {
 		/*
 		 * The private constructor
 		 */
-		static int is[] = {sizeof(gr_complex), sizeof(char)};
-		static std::vector<int> isig(is, is+sizeof(is)/sizeof(int));
 		static int os[] = {sizeof(gr_complex), sizeof(float)};
 		static std::vector<int> osig(os, os+sizeof(os)/sizeof(int));
 		da_carrier_phase_rec_impl::da_carrier_phase_rec_impl(
@@ -80,7 +78,7 @@ namespace gr {
 			const std::vector<gr_complex> &tracking_syms, int tracking_interval,
 			int frame_len, bool debug_stats)
 			: gr::block("da_carrier_phase_rec",
-			            io_signature::makev(2, 2, isig),
+			            io_signature::make(1, 1, sizeof(gr_complex)),
 			            io_signature::makev(2, 2, osig)),
 			d_noise_bw(noise_bw),
 			d_damp_factor(damp_factor),
@@ -97,7 +95,8 @@ namespace gr {
 			d_beta(1 - 0.001),
 			d_avg_err(0.0),
 			d_n_sym_err(0.0),
-			d_n_sym_tot(0.0)
+			d_n_sym_tot(0.0),
+			d_fs_phase(0.0)
 		{
 			d_preamble_syms.resize(preamble_syms.size());
 			d_preamble_syms = preamble_syms;
@@ -125,6 +124,8 @@ namespace gr {
 			d_K2 = set_K2(damp_factor, noise_bw);
 
 			set_output_multiple(d_data_len);
+			set_relative_rate((double) d_data_len / d_frame_len);
+			set_tag_propagation_policy(TPP_DONT);
 		}
 
 		/*
@@ -221,7 +222,6 @@ namespace gr {
 		                                            gr_vector_void_star &output_items)
 		{
 			const gr_complex *rx_sym_in = (const gr_complex*) input_items[0];
-			const char *is_preamble  = (const char*) input_items[1];
 			gr_complex *rx_sym_out = (gr_complex *) output_items[0];
 			float *error_out = (float *) output_items[1];
 			gr_complex x_derotated, x_sliced;
@@ -241,6 +241,14 @@ namespace gr {
 			debug_printf("%s: ninput items[1]: %d\n", __func__, ninput_items[1]);
 			debug_printf("%s: noutput items: %d\n", __func__, noutput_items);
 
+			/* Check the phase rotation indicated by the frame synchronizer
+			 * NOTE: this tag should be on the very first symbol of the frame */
+			std::vector<tag_t> tags;
+			get_tags_in_window(tags, 0, 0, 1, pmt::mp("fs_phase_corr"));
+			for (unsigned i = 0; i < tags.size(); i++) {
+				d_fs_phase = pmt::to_float(tags[i].value);
+			}
+
 			/* Frame-by-frame processing
 			 *
 			 * Indexes:
@@ -255,18 +263,13 @@ namespace gr {
 
 				// Reset the loop state for each frame, if so desired
 				if (d_reset_per_frame) {
-					d_nco_phase  = 0.0; // Reset the NCO phase accumulator
+					d_nco_phase  = d_fs_phase; // Reset the NCO phase accumulator
 					d_integrator = 0.0; // Reset the integrator
 				}
 
 				/* Preamble */
 
 				for (int k = 0; k < d_preamble_len; k++) {
-#ifdef DEBUG
-					if (!is_preamble[i])
-						printf("%s: ERROR\tpreamble alignment incorrect\n",
-						       __func__);
-#endif
 					/* NCO */
 					x_derotated = rx_sym_in[i] * gr_expj(-d_nco_phase);
 

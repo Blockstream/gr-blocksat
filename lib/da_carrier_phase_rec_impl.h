@@ -93,6 +93,7 @@ namespace gr {
 			float d_avg_err;
 			float d_n_sym_err;
 			float d_n_sym_tot;
+			float d_fs_phase; /* phase error detected by frame sync */
 
 			/*
 			 * \brief Update the PI loop
