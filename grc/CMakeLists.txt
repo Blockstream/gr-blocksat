@@ -33,5 +33,6 @@ install(FILES
     blocksat_variable_rx_logger.xml
     blocksat_argpeak.xml
     blocksat_soft_decoder_cf.xml
-    blocksat_agc_cc.xml DESTINATION share/gnuradio/grc/blocks
+    blocksat_agc_cc.xml
+    blocksat_frame_synchronizer_cc.xml DESTINATION share/gnuradio/grc/blocks
 )

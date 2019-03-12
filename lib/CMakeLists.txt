@@ -49,6 +49,7 @@ list(APPEND blocksat_sources
     aff3ct/unimplemented_error.cpp
     soft_decoder_cf_impl.cc
     agc_cc_impl.cc
+    frame_synchronizer_cc_impl.cc
 )
 #		bash_tools.cpp
 #		cannot_allocate.cpp

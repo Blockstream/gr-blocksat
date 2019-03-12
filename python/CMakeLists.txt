@@ -53,3 +53,4 @@ GR_ADD_TEST(qa_mer_measurement ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/
 GR_ADD_TEST(qa_da_carrier_phase_rec ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_da_carrier_phase_rec.py)
 GR_ADD_TEST(qa_soft_decoder_cf ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_soft_decoder_cf.py)
 GR_ADD_TEST(qa_agc_cc ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_agc_cc.py)
+GR_ADD_TEST(qa_frame_synchronizer_cc ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_frame_synchronizer_cc.py)

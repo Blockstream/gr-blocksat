@@ -317,7 +317,7 @@ class tuning_control(threading.Thread):
   def check_timing_metric(self):
 
     # Get the timing metric from the frame synchronizer
-    timing_metric = self.frame_sync_obj.get_avg_timing_metric()
+    timing_metric = self.frame_sync_obj.get_mag_pmf_peak()
 
     self.metric.append(timing_metric)
 

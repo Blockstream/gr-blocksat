@@ -1,0 +1,145 @@
+<?xml version="1.0"?>
+<block>
+  <name>Frame Synchronizer</name>
+  <key>blocksat_frame_synchronizer_cc</key>
+  <category>[Blockstream Satellite]/Synchronizers</category>
+  <import>import blocksat</import>
+  <make>blocksat.frame_synchronizer_cc(
+  $preamble_syms,
+  $frame_len,
+  $M,
+  $n_success_to_lock,
+  $en_eq,
+  $en_phase_corr,
+  $verbose)</make>
+  <callback>get_mag_pmf_peak()</callback>
+  <callback>get_state()</callback>
+  <param>
+    <name>Preamble Symbols</name>
+    <key>preamble_syms</key>
+    <type>complex_vector</type>
+  </param>
+  <param>
+    <name>Frame Length</name>
+    <key>frame_len</key>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Constellation Order</name>
+    <key>M</key>
+    <value>2</value>
+    <type>int</type>
+    <hide>none</hide>
+    <option>
+      <name>2 (BPSK)</name>
+      <key>2</key>
+    </option>
+    <option>
+      <name>4 (QPSK)</name>
+      <key>4</key>
+    </option>
+  </param>
+  <param>
+    <name>Success to Lock</name>
+    <key>n_success_to_lock</key>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Gain Scaling</name>
+    <key>en_eq</key>
+    <type>bool</type>
+    <option>
+      <name>Disabled</name>
+      <key>False</key>
+    </option>
+    <option>
+      <name>Enabled</name>
+      <key>True</key>
+    </option>
+  </param>
+  <param>
+    <name>Phase Correction</name>
+    <key>en_phase_corr</key>
+    <type>bool</type>
+    <option>
+      <name>Disabled</name>
+      <key>False</key>
+    </option>
+    <option>
+      <name>Enabled</name>
+      <key>True</key>
+    </option>
+  </param>
+  <param>
+    <name>Verbose</name>
+    <key>verbose</key>
+    <type>bool</type>
+  </param>
+  <sink>
+    <name>in</name>
+    <type>complex</type>
+    <vlen>1</vlen>
+  </sink>
+  <source>
+    <name>out</name>
+    <type>complex</type>
+    <vlen>1</vlen>
+  </source>
+  <source>
+    <name>pmf_out</name>
+    <type>complex</type>
+    <vlen>1</vlen>
+    <optional>1</optional>
+  </source>
+  <doc>Continuous-transmission Correlation-based Frame Synchronization
+
+
+Frame synchronization algorithm that relies on a filter matched to the \
+preamble, known as "preamble matched filter" (PMF) in order to compute the \
+cross-correlation between the received symbols and the preamble symbols known \
+a priori.
+
+The block should be configured with a vector of preamble symbols that presents \
+good correlation performance, namely a sequence of symbols that is highly \
+correlated at lag 0 and presents negligible correlation for all other lags. \
+For example, a Barker code sequence.
+
+Internally the cross-correlation is constantly computed and the peaks are \
+inspected. All peaks exceeding the "Peak Detection Threshold" parameter are \
+deemed as peaks, but the internal logic searches for the highest peak in case \
+there are multiple peaks for one frame.\
+
+The block keeps track of a sequence of peaks and, because it is configured \
+with the frame length (given by both the preamble and payload lengths), it is \
+able to compare whether the interval between detected peaks matches the \
+expected interval (assuming continuous transmission). Once this is true for \
+sufficiently long, the block infers that frame synchronization has been \
+acquired.
+
+Finally, once frame synchronization lock is acquired, the block starts to \
+output symbols. It can be configured either to 1) output both preamble and \
+payload symbols or 2) solely payload symbols. The former alternative is used \
+when the downstream blocks rely on the preamble for any data-aided processing, \
+such as data-aided carrier phase correction.
+
+Note #1: \
+An important remark is that the PMF can also be used for channel estimation. \
+In fact, a single-tap channel estimator based on least-squares gives the exact \
+same solution as the result of the peak yielded by the PMF. Nevertheless, \
+note that, because there may be carrier frequency or phase offset affecting \
+the incoming symbols, this channel estimation can be unreliable in terms of \
+phase, although it may still be useful in order to obtain the channel gain. \
+Hence, when the "Single-tap Equalization" parameter is enabled, only magnitude \
+(channel gain) equalization is performed.
+
+Note #2: \
+When observing the complex-valued PMF peak, it can be seen that the peak may \
+be rotated in the complex plane. For example, when using two-dimensional \
+preamble symbols, the peak may result in the real component and be positive \
+(non-rotated case), but it may also appear for instance in the imaginary \
+component as a negative peak (due to rotation). This rotation is inspected \
+internally and can be used for phase correction, if the "Phase Correction" \
+parameter is enabled.
+
+</doc>
+</block>

@@ -55,12 +55,12 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
                             data_len)
         data_syms         = ((-1 + 0j), (1 + 0j), (1 + 0j), (-1 + 0j),
                              (-1 + 0j))
-        is_preamble       = (1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0)
         src_data          = preamble_syms + ((-1 + 0j), (1 + 0j)) + \
                             tracking_syms + ((1 + 0j), (-1 + 0j)) + \
                             tracking_syms + ((-1 + 0j),)
-        src1              = blocks.vector_source_c(src_data)
-        src2              = blocks.vector_source_b(is_preamble)
+
+        # Flowgraph
+        sym_src           = blocks.vector_source_c(src_data)
         phase_rec         = blocksat.da_carrier_phase_rec(preamble_syms,
                                                           noise_bw,
                                                           damp_factor,
@@ -74,8 +74,7 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
         dst1              = blocks.vector_sink_c()
         dst2              = blocks.vector_sink_f()
 
-        self.tb.connect(src1, (phase_rec, 0))
-        self.tb.connect(src2, (phase_rec, 1))
+        self.tb.connect(sym_src, (phase_rec, 0))
         self.tb.connect((phase_rec, 0), dst1)
         self.tb.connect((phase_rec, 1), dst2)
         self.tb.run()
@@ -105,16 +104,15 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
                             data_len)
         data_syms         = ((-1 + 0j), (1 + 0j), (1 + 0j), (-1 + 0j),
                              (-1 + 0j))
-        is_preamble       = (1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0)
         n_frames          = 50
         full_frame        = preamble_syms + ((-1 + 0j), (1 + 0j)) + \
                             tracking_syms + ((1 + 0j), (-1 + 0j)) + \
                             tracking_syms + ((-1 + 0j),)
         src_data          = repmat(full_frame, 1, n_frames)[0]
         expected_result   = repmat(data_syms, 1, n_frames)[0]
-        is_preamble       = repmat(is_preamble, 1, n_frames)[0]
-        src1              = blocks.vector_source_c(src_data)
-        src2              = blocks.vector_source_b(is_preamble)
+
+        # Flowgraph
+        sym_src           = blocks.vector_source_c(src_data)
         phase_rec         = blocksat.da_carrier_phase_rec(preamble_syms,
                                                           noise_bw,
                                                           damp_factor,
@@ -128,8 +126,7 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
         dst1              = blocks.vector_sink_c()
         dst2              = blocks.vector_sink_f()
 
-        self.tb.connect(src1, (phase_rec, 0))
-        self.tb.connect(src2, (phase_rec, 1))
+        self.tb.connect(sym_src, (phase_rec, 0))
         self.tb.connect((phase_rec, 0), dst1)
         self.tb.connect((phase_rec, 1), dst2)
         self.tb.run()
@@ -182,8 +179,6 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
                                 (n_tracking_seqs * tracking_len) + \
                                 data_len)
         payload_len       = frame_len - preamble_len
-        is_preamble       = tuple(repmat((1,), 1, preamble_len)[0]) + \
-                            tuple(repmat((0,), 1, payload_len)[0])
 
         # Generate frames with random data symbols
         src_data        = []
@@ -201,12 +196,8 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
                 else:
                     src_data += data_syms
 
-        # "Is preamble" signal is simply a repetition
-        is_preamble       = repmat(is_preamble, 1, n_frames)[0]
-
         # Flowgraph
-        src1              = blocks.vector_source_c(src_data)
-        src2              = blocks.vector_source_b(is_preamble)
+        sym_src           = blocks.vector_source_c(src_data)
         phase_rec         = blocksat.da_carrier_phase_rec(preamble_syms,
                                                           noise_bw,
                                                           damp_factor,
@@ -220,8 +211,7 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
         dst1              = blocks.vector_sink_c()
         dst2              = blocks.vector_sink_f()
 
-        self.tb.connect(src1, (phase_rec, 0))
-        self.tb.connect(src2, (phase_rec, 1))
+        self.tb.connect(sym_src, (phase_rec, 0))
         self.tb.connect((phase_rec, 0), dst1)
         self.tb.connect((phase_rec, 1), dst2)
         self.tb.run()
