@@ -224,7 +224,7 @@ namespace gr {
 			const gr_complex *rx_sym_in = (const gr_complex*) input_items[0];
 			gr_complex *rx_sym_out = (gr_complex *) output_items[0];
 			float *error_out = (float *) output_items[1];
-			gr_complex x_derotated, x_sliced;
+			gr_complex x_derotated, x_sliced, conj_prod_err;
 			int i_sliced;
 			float phi_error;
 			gr_complex e_k;
@@ -273,9 +273,18 @@ namespace gr {
 					/* NCO */
 					x_derotated = rx_sym_in[i] * gr_expj(-d_nco_phase);
 
-					/* DA phase error detector (second term null for BPSK) */
-					phi_error = (x_derotated.imag() * d_preamble_syms[k].real()) -
-						(x_derotated.real() * d_preamble_syms[k].imag());
+					/* DA atan phase error detector
+					 *
+					 * NOTE: the data-aided ML phase error detector has an
+					 * ambiguity at phase error of pi rad. The atan phase error
+					 * detector does not. In contrast, the ambiguity of the ML
+					 * phase error detector and the atan detector is the same
+					 * for decision-directed operation. Hence, use the atan
+					 * detector only for preamble and tracking symbols
+					 * (data-aided mode).
+					 */
+					conj_prod_err = x_derotated * conj(d_preamble_syms[k]);
+					phi_error = gr::fast_atan2f(conj_prod_err);
 
 					/* PI loop update */
 					loop_step(phi_error);
@@ -341,8 +350,8 @@ namespace gr {
 						d_const.slice(&x_derotated, &x_sliced);
 
 						/* Decision-directed ML phase error detector: */
-						phi_error = (x_derotated.imag() * x_sliced.real()) -
-							(x_derotated.real() * x_sliced.imag());
+						conj_prod_err = x_derotated * conj(x_sliced);
+						phi_error = gr::fast_atan2f(conj_prod_err);
 
 						/*
 						 * Force error to zero if data-aided only
@@ -386,11 +395,9 @@ namespace gr {
 						/* NCO */
 						x_derotated = rx_sym_in[i] * gr_expj(-d_nco_phase);
 
-						/* DA phase error detector  */
-						phi_error = (x_derotated.imag() *
-						             d_tracking_syms[k].real()) -
-							(x_derotated.real() *
-							 d_tracking_syms[k].imag());
+						/* DA atan phase error detector */
+						conj_prod_err = x_derotated * conj(d_tracking_syms[k]);
+						phi_error = gr::fast_atan2f(conj_prod_err);
 
 						/* PI loop update */
 						loop_step(phi_error);
