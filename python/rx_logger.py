@@ -167,9 +167,7 @@ def print_cfo(block_obj, label_setter):
 
     norm_freq = norm_angular_freq / (2.0 * math.pi)
 
-    analog_freq = norm_freq * sample_rate
-
-    cfo = -analog_freq
+    cfo = norm_freq * sample_rate
 
     # Print
     sys.stdout.write("----------------------------------------")
@@ -177,11 +175,16 @@ def print_cfo(block_obj, label_setter):
     sys.stdout.write("[" + time.strftime("%Y-%m-%d %H:%M:%S") + "] ")
     sys.stdout.write("Carrier Frequency Offset: ")
 
-    sys.stdout.write(str("{:2.4f}".format(cfo/1e3)) + " kHz ")
+    cfo_str = str("{:2.4f}".format(cfo/1e3)) + " kHz "
+    sys.stdout.write(cfo_str)
 
     sys.stdout.write("\n----------------------------------------")
     sys.stdout.write("----------------------------------------\n")
     sys.stdout.flush()
+
+    # Set the frequency offset in the label as well
+    if (label_setter is not None):
+        label_setter(cfo_str)
 
 
 class rx_logger():
@@ -195,7 +198,7 @@ class rx_logger():
                  frame_synchronizer_obj, frame_sync_log_period,
                  decoder_obj, ber_log_period, cfo_rec_obj,
                  cfo_log_period, enabled_start,
-                 fs_label_setter, ber_label_setter):
+                 fs_label_setter, ber_label_setter, fo_label_setter):
 
         global sample_rate
         sample_rate = samp_rate
@@ -233,7 +236,8 @@ class rx_logger():
                                      cfo_log_period,
                                      print_cfo,
                                      lock,
-                                     enabled_start)
+                                     enabled_start,
+                                     fo_label_setter)
 
         # Start loggers
 

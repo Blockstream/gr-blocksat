@@ -49,6 +49,7 @@ list(APPEND blocksat_sources
     soft_decoder_cf_impl.cc
     agc_cc_impl.cc
     frame_synchronizer_cc_impl.cc
+    ffw_coarse_freq_req_cc_impl.cc
 )
 #		bash_tools.cpp
 #		cannot_allocate.cpp
