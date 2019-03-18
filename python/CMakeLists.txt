@@ -52,3 +52,4 @@ GR_ADD_TEST(qa_da_carrier_phase_rec ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_
 GR_ADD_TEST(qa_soft_decoder_cf ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_soft_decoder_cf.py)
 GR_ADD_TEST(qa_agc_cc ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_agc_cc.py)
 GR_ADD_TEST(qa_frame_synchronizer_cc ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_frame_synchronizer_cc.py)
+GR_ADD_TEST(qa_ffw_coarse_freq_req_cc ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_ffw_coarse_freq_req_cc.py)

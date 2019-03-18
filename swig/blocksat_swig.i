@@ -19,6 +19,7 @@
 #include "blocksat/soft_decoder_cf.h"
 #include "blocksat/agc_cc.h"
 #include "blocksat/frame_synchronizer_cc.h"
+#include "blocksat/ffw_coarse_freq_req_cc.h"
 %}
 
 
@@ -44,3 +45,5 @@ GR_SWIG_BLOCK_MAGIC2(blocksat, soft_decoder_cf);
 GR_SWIG_BLOCK_MAGIC2(blocksat, agc_cc);
 %include "blocksat/frame_synchronizer_cc.h"
 GR_SWIG_BLOCK_MAGIC2(blocksat, frame_synchronizer_cc);
+%include "blocksat/ffw_coarse_freq_req_cc.h"
+GR_SWIG_BLOCK_MAGIC2(blocksat, ffw_coarse_freq_req_cc);

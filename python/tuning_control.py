@@ -8,7 +8,6 @@ from numpy import arange
 
 # Definitions
 min_cfo_rec_alpha_scan_mode = 0.1
-nco_update_rate_hz = 200
 max_n_scan_attemps = 2
 
 class tuning_control(threading.Thread):
@@ -17,45 +16,37 @@ class tuning_control(threading.Thread):
   Runtime control of the RF center frequency or RF frequency scanning helper.
 
   Attributes:
-    scan_range        :  Range of frequencies to scan (0 disables scan mode)
+    samp_rate         :  Samples rate
+    sps               :  Samples-per-symbol
+    M                 :  Constellation order
+    scan_mode         :  Activates scan mode
     n_steps           :  Number iterations used to sweep the scan range
     cfo_poll_interval :  CFO polling interval in runtime control mode
     scan_interval     :  Interval between each scanned frequency in scan mode
-    sps               :  Samples-per-symbol (used to reset the FLL)
     frame_sync_obj    :  Object of the top-level frame synchronizer module
     cfo_rec_obj       :  Object of the top-level frequency (CFO) recovery module
-    nco_obj           :  Object of the top-level NCO module
     logger_obj        :  Object of the top-level Rx Logger module
     freq_label_obj    :  Object of the top-level GUI label (if any)
-    fll_obj           :  Object of the top-level band-edge FLL
     rf_freq_getter    :  Getter for the top-level RF center frequency
     rf_freq_setter    :  Setter for the top-level RF center frequency
   """
 
-  def __init__(self, samp_rate, sps, scan_range, n_steps, cfo_poll_interval,
-               scan_interval, frame_sync_obj, cfo_rec_obj, nco_obj, logger_obj,
-               freq_label_obj, fll_obj, rf_freq_getter, rf_freq_setter):
+  def __init__(self, samp_rate, sps, M, scan_mode, n_steps, cfo_poll_interval,
+               scan_interval, frame_sync_obj, cfo_rec_obj, logger_obj,
+               freq_label_obj, rf_freq_getter, rf_freq_setter):
 
-    self.samp_rate  = samp_rate
-    self.sps        = sps
-    self.scan_mode  = (scan_range != 0)
-    self.scan_range = scan_range
-    self.rf_freq    = rf_freq_getter()
+    self.samp_rate   = samp_rate
+    self.sps         = sps
+    self.const_order = M
+    self.scan_mode   = scan_mode
+    self.rf_freq     = rf_freq_getter()
 
     self.frame_sync_obj = frame_sync_obj
     self.cfo_rec_obj    = cfo_rec_obj
-    self.nco_obj        = nco_obj
-    self.fll_obj        = fll_obj
     self.rx_logger      = logger_obj
 
     # Detect which CFO recovery scheme is adopted
-    if (self.fll_obj is not None and self.cfo_rec_obj is not None):
-      raise ValueError("Two different freq. rec. mechanisms")
-    elif (self.fll_obj is not None):
-      self.freq_rec_method = "FLL"
-    elif (self.cfo_rec_obj is not None):
-      self.freq_rec_method = "FFT"
-    else:
+    if (self.cfo_rec_obj is None):
       raise ValueError("Not freq. recovery module")
 
     # Interaction with the SDR
@@ -64,15 +55,19 @@ class tuning_control(threading.Thread):
 
     self.cfo_poll_interval   = cfo_poll_interval
     self.scan_interval       = scan_interval
-    self.nco_update_interval = 1.0/nco_update_rate_hz
 
     # Launch either the frequency scan or CFO control thread
     if (self.scan_mode):
-
-      self.freq_step    = scan_range/n_steps
+      if (self.const_order == 4):
+        self.freq_step = (self.samp_rate / 4)
+      elif (self.const_order == 2):
+        self.freq_step = (self.samp_rate / 2)
+      else:
+        raise ValueError("Constellation order %d is not supported" %(M))
+      self.scan_range   = n_steps * self.freq_step
       self.curr_freq    = self.rf_freq
       self.freqs        = self.get_freq_scan_array(self.rf_freq,
-                                                   scan_range,
+                                                   self.scan_range,
                                                    n_steps)
       self.n_scan_steps = n_steps
 
@@ -87,14 +82,6 @@ class tuning_control(threading.Thread):
       self.cfo_ctrl_thread.daemon = True
       self.cfo_ctrl_thread.start()
 
-    # And regardless of the operation mode, launch the NCO control
-    # thread:
-    if (self.nco_obj):
-      self.nco_ctrl_thread = threading.Thread(target=self.nco_controller,
-                                              args=())
-      self.nco_ctrl_thread.daemon = True
-      self.nco_ctrl_thread.start()
-
   def freq_scanner(self):
     """ Frequency scan mode """
 
@@ -105,21 +92,13 @@ class tuning_control(threading.Thread):
     # number of attempts:
     n_attempts = 0
 
-    # Configure the frequency recovery to respond quick enough during the scan
-    if (self.cfo_rec_obj is not None):
-      start_freq_rec_alpha = self.cfo_rec_obj.get_alpha()
-
-      if (start_freq_rec_alpha < min_cfo_rec_alpha_scan_mode):
-        self.cfo_rec_obj.set_alpha(min_cfo_rec_alpha_scan_mode)
-    else:
-      start_freq_rec_alpha = 0
-
     # Sleep shortly just to allow the initialization logs to clear
     time.sleep(3)
 
     print("\n========================= Scan Mode =========================")
-    print("Sweep from %f MHz to %f MHz, in steps of %.2f kHz" %(
-      min(self.freqs)/1e6, max(self.freqs)/1e6, self.freq_step/1e3))
+    print("Sweep %.2f MHz from %f MHz to %f MHz, in steps of %.2f kHz" %(
+      self.scan_range/1e6, min(self.freqs)/1e6, max(self.freqs)/1e6,
+      self.freq_step/1e3))
     self.print_scan_duration()
 
     # Change to the starting frequency
@@ -208,31 +187,22 @@ class tuning_control(threading.Thread):
     # ------- Scan exit routine -------
 
     # Then exit:
-    self.exit_scan_mode(frame_lock_acquired, best_freq, start_freq_rec_alpha)
+    self.exit_scan_mode(best_freq)
 
   def cfo_controller(self):
     """ Interaction with Runtime CFO controller """
 
     # CFO threshold
     #
-    # The BE filter is centered at "(1 + rolloff) * (Rsym/2)". A frequency shift
-    # of "(1 + rolloff) * (Rsym/2)" shifts the signal to the BE filter center,
-    # but in this case half of the effective signal bandwidth is still
-    # inside. Twice this amount shifts the extreme energy of the effective
-    # bandwidth to the BE center frequency. Yet, the BE filter extends over
-    # "rolloff * (Rsym/2)" from its center point, Thus, the maximum traceable
-    # CFO is:
-    #   (1 + rolloff)*(Rsym/2) +
-    #   (1 + rolloff)*(Rsym/2) +
-    #   rolloff * (Rsym/2)
-    #   ------------------------
-    #   = (1 + (3/2)*rolloff)*(Rsym/2)
-    #
-    # A slightly lower value is then used for the threshold
-    if (self.freq_rec_method == "FLL"):
-      sym_rate               = self.samp_rate / self.sps
-      rolloff                = self.fll_obj.rolloff()
-      self.abs_cfo_threshold = sym_rate * (1 + (1.4)*rolloff)
+    # For the FFT method, the theoretical limit is samp_rate/8 for QPSK and
+    # samp_rate/4 for BPSK. We use a slightly lower value.
+    if (self.const_order == 4):
+      self.abs_cfo_threshold = 0.95 * (self.samp_rate / 8)
+    elif (self.const_order == 2):
+      self.abs_cfo_threshold = 0.95 * (self.samp_rate / 4)
+    else:
+      raise ValueError("Constellation order %d is not supported" %(
+        self.const_order))
 
     next_work = time.time() + self.cfo_poll_interval
 
@@ -263,17 +233,9 @@ class tuning_control(threading.Thread):
       frame_sync_state = self.frame_sync_obj.get_state()
 
       # Update the radio RF center frequency if a new one is requested
-      if (self.freq_rec_method == "FLL"):
-        current_cfo_est       = self.get_fll_cfo_estimation()
-        update_freq           = (abs(current_cfo_est) > self.abs_cfo_threshold)
-        target_rf_center_freq = current_rf_center_freq + current_cfo_est
-
-      elif (self.freq_rec_method == "FFT"):
-        target_rf_center_freq = self.cfo_rec_obj.get_rf_center_freq()
-        update_freq           = (current_rf_center_freq != target_rf_center_freq)
-
-      else:
-        raise ValueError("Unsupported freq. rec")
+      current_cfo_est       = self.get_cfo_estimation()
+      update_freq           = (abs(current_cfo_est) > self.abs_cfo_threshold)
+      target_rf_center_freq = current_rf_center_freq + current_cfo_est
 
       if (update_freq and frame_sync_state != 0):
 
@@ -293,26 +255,9 @@ class tuning_control(threading.Thread):
         # Update the RF frequency
         self.set_freq(target_rf_center_freq)
 
-  def nco_controller(self):
-    """Interaction with the NCO module and the runtime CFO controller module"""
-
-    next_work = time.time() + self.nco_update_interval
-
-    while True:
-
-      # Sleep until next scheduled work
-      current_time = time.time()
-
-      if (next_work > current_time):
-        time.sleep(next_work - current_time)
-
-      # Schedule next work
-      next_work = time.time() + self.nco_update_interval
-
-      # Update the frequency corrected by the NCO - make it equal to the
-      # CFO that is currently estimated in the runtime CFO controller module
-      current_cfo_est = self.cfo_rec_obj.get_cfo_estimate()
-      self.nco_obj.set_freq(current_cfo_est)
+        # After an udpdate, sleep for a few more seconds to prevent a second
+        # polling of CFO before locking
+        next_work = next_work + 4
 
   def check_timing_metric(self):
 
@@ -357,31 +302,13 @@ class tuning_control(threading.Thread):
       sys.stdout.write('..')
       sys.stdout.flush()
 
-  def exit_scan_mode(self, frame_lock, target_freq, freq_rec_alpha):
+  def exit_scan_mode(self, target_freq):
     """Routine for exiting the scan mode and turning into normal mode
 
     Args:
-        frame_lock     : asserted when scan exits with frame lock
         target_freq    : the target RF center frequency obtained through scan
-        freq_rec_alpha : the averaging alpha to be ser for the CFO recovery
 
     """
-
-    # Set the RF center frequency in HW in case the scan has not exited with
-    # frame lock:
-    if (not frame_lock or not self.frame_sync_obj.get_state()):
-      if (self.freq_rec_method == "FLL"):
-        current_cfo_est = self.get_fll_cfo_estimation()
-        self.set_freq(target_freq + current_cfo_est)
-        # Changing frequency will lead to frame recovery loss, so it is better to
-        # wait until the frame loss logs are printed
-        time.sleep(3)
-      else:
-        self.set_freq(target_freq)
-
-    # Set frequency recovery averaging length back to the starting value:
-    if (self.cfo_rec_obj is not None):
-      self.cfo_rec_obj.set_alpha(freq_rec_alpha)
 
     # Launch runtime control interaction thread:
     self.cfo_ctrl_thread = threading.Thread(target=self.cfo_controller,
@@ -448,28 +375,16 @@ class tuning_control(threading.Thread):
   def set_freq(self, freq):
     """Wrapper for setting the frequency in HW as int """
 
-    if (self.freq_rec_method == "FLL"):
-      self.reset_fll()
+    self.cfo_rec_obj.reset()
 
     self.set_hw_freq(int(round(freq)))
 
-  def reset_fll(self):
-    """Workaround to reset the FLL"""
+  def get_cfo_estimation(self):
+    """Get the CFO corresponding to the current freq. correction """
 
-    self.fll_obj.set_samples_per_symbol(self.sps)
-    self.fll_obj.set_frequency(0)
-    self.fll_obj.set_phase(0)
-
-  def get_fll_cfo_estimation(self):
-    """Get the CFO corresponding to the current freq. correction in the FLL"""
-
-    norm_angular_freq = self.fll_obj.get_frequency()
-
-    norm_freq = norm_angular_freq / (2.0 * math.pi)
-
-    analog_freq = norm_freq * self.samp_rate
-
-    return (-analog_freq)
+    norm_angular_freq = self.cfo_rec_obj.get_frequency()
+    norm_freq         = norm_angular_freq / (2.0 * math.pi)
+    return (norm_freq * self.samp_rate)
 
   def print_scan_duration(self):
     """Compute and print the maximum duration expected for the complete scan """

@@ -18,7 +18,8 @@ self.$(id) = blocksat.rx_logger(
     $cfo_log_period,
     $enabled_start,
     (None if not hasattr(self, 'set_fs_label') else self.set_fs_label),
-    (None if not hasattr(self, 'set_ber_label') else self.set_ber_label)
+    (None if not hasattr(self, 'set_ber_label') else self.set_ber_label),
+    (None if not hasattr(self, 'set_freq_offset_label') else self.set_freq_offset_label)
 )
     </make>
     <callback>self.set_$(id)($value)</callback>
