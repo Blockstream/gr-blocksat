@@ -118,6 +118,12 @@ namespace gr {
 		{
 			volk_free(d_llr_buffer);
 			volk_free(d_int_buffer);
+			delete interleaver;
+			delete sub_enc;
+			delete sub_dec;
+			delete dec;
+			if (d_pct_en)
+				delete pct;
 		}
 
 		int
