@@ -48,6 +48,7 @@ namespace gr {
 			 * \param rate the update rate of the loop.
 			 * \param reference reference value to adjust signal power to.
 			 * \param gain initial gain value.
+			 * \param max_gain maximum loop gain value
 			 */
 			static sptr make(float rate = 1e-4, float reference = 1.0,
 			                 float gain = 1.0, float max_gain = 65536);
