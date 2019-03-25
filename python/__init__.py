@@ -31,7 +31,6 @@ except ImportError:
 	pass
 
 # import any pure python here
-from ffw_coarse_freq_rec import ffw_coarse_freq_rec
 from protocol_sink import protocol_sink
 from tuning_control import tuning_control
 from rx_logger import rx_logger

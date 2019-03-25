@@ -25,9 +25,6 @@ install(FILES
     turbo_decoder.h
     mer_measurement.h
     da_carrier_phase_rec.h
-    nco_cc.h
-    wrap_fft_index.h
     exponentiate_const_cci.h
-    runtime_cfo_ctrl.h
     argpeak.h DESTINATION include/blocksat
 )
