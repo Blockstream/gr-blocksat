@@ -8,7 +8,6 @@
 %include "blocksat_swig_doc.i"
 
 %{
-#include "blocksat/frame_sync_fast.h"
 #include "blocksat/turbo_decoder.h"
 #include "blocksat/mer_measurement.h"
 #include "blocksat/da_carrier_phase_rec.h"
@@ -23,8 +22,6 @@
 %}
 
 
-%include "blocksat/frame_sync_fast.h"
-GR_SWIG_BLOCK_MAGIC2(blocksat, frame_sync_fast);
 %include "blocksat/turbo_decoder.h"
 GR_SWIG_BLOCK_MAGIC2(blocksat, turbo_decoder);
 %include "blocksat/mer_measurement.h"

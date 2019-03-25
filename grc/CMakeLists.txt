@@ -18,7 +18,6 @@
 # Boston, MA 02110-1301, USA.
 
 install(FILES
-    blocksat_frame_sync_fast.xml
     blocksat_protocol_sink.xml
     blocksat_turbo_decoder.xml
     blocksat_mer_measurement.xml
@@ -26,7 +25,6 @@ install(FILES
     blocksat_nco_cc.xml
     blocksat_ffw_coarse_freq_rec.xml
     blocksat_wrap_fft_index.xml
-    blocksat_frame_synchronizer.xml
     blocksat_exponentiate_const_cci.xml
     blocksat_runtime_cfo_ctrl.xml
     blocksat_variable_tuning_control.xml

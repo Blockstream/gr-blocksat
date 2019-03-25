@@ -30,7 +30,6 @@ list(APPEND blocksat_sources
     argpeak_impl.cc
     da_carrier_phase_rec_impl.cc
     exponentiate_const_cci_impl.cc
-    frame_sync_fast_impl.cc
     mer_measurement_impl.cc
     nco_cc_impl.cc
     runtime_cfo_ctrl_impl.cc
