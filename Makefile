@@ -43,24 +43,3 @@ uninstall:
 test:
 	$(MAKE) -C $(BUILD_DIR) test
 
-# Re-build Hierarchical Blocks
-# NOTE: the hierarchical blocks are pre-built in the repository due to the fact
-# that the top-level Python modules that they generate have been
-# customized. They should only be re-built in case there is some
-# incompatibility. In this case, the customizations in the top-level Python need
-# to be restored. These are easily tracked by using "git diff".
-hier: clean-hier build-hier
-
-build-hier: $(HIER_RC)
-
-apps/hier/%.build_record: apps/hier/%.grc
-	grcc $<
-	mv $(HOME)/.grc_gnuradio/$(*F).py python/
-	mv $(HOME)/.grc_gnuradio/$(*F).py.xml grc/blocksat_$(*F).xml
-	$(warning Build of hier blocks discards required python customizations)
-	$(info Check the changes using git and restore the customizations)
-	touch apps/hier/$(*F).build_record
-
-clean-hier:
-	-rm $(HIER_PY_FILES)
-	-rm $(HIER_RC)

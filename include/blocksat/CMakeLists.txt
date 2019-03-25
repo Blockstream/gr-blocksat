@@ -22,7 +22,6 @@
 ########################################################################
 install(FILES
     api.h
-    frame_sync_fast.h
     turbo_decoder.h
     mer_measurement.h
     da_carrier_phase_rec.h
