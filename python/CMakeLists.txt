@@ -31,7 +31,6 @@ endif()
 GR_PYTHON_INSTALL(
     FILES
     __init__.py
-    ffw_coarse_freq_rec.py
     tuning_control.py
     protocol_sink.py
     rx_logger.py
