@@ -66,6 +66,7 @@ namespace gr {
 				M_PI/2,
 				0.0
 			};
+			int           d_start_idx_cfo;
 
 		public:
 			frame_synchronizer_cc_impl(

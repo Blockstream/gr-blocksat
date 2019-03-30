@@ -35,29 +35,38 @@ namespace gr {
 			int               d_M;
 			unsigned int      d_sleep_per;
 			bool              d_debug;
+			int               d_frame_len;
+			int               d_sps;
+			int               d_frame_len_oversamp;
 			float             d_beta;
 			int               d_half_fft_len;
 			fft::fft_complex *d_fft;
-			int               d_align;
 			gr_complex       *d_fft_buffer;
 			float            *d_mag_buffer;
 			float            *d_avg_buffer;
+			uint32_t         *d_i_max_buffer;
 			float             d_delta_f;
 			float             d_f_e;
+			float             d_pend_f_e;
 			float             d_phase_inc;
-			gr_complex        d_nco_phasor;
-			gr_complex        d_nco_phasor_0;
 			float             d_phase_accum;
+			gr_complex        d_nco_phasor;
 			unsigned int      d_i_block;
 			unsigned int      d_n_equal_corr;
+			int               d_start_index;
+			int               d_i_sample;
+			bool              d_pend_corr_update;
 
+			void update_nco_phase(int n_samples);
 
 		public:
 			ffw_coarse_freq_req_cc_impl(int fft_len, float alpha, int M,
-			                            int sleep_per, bool debug);
+			                            int sleep_per, bool debug,
+			                            int frame_len, int sps);
 			~ffw_coarse_freq_req_cc_impl();
 
 			// Where all the action really happens
+			void handle_set_start_index(pmt::pmt_t msg);
 			int work(int noutput_items,
 			         gr_vector_const_void_star &input_items,
 			         gr_vector_void_star &output_items);

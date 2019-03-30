@@ -4,7 +4,7 @@
   <key>blocksat_ffw_coarse_freq_req_cc</key>
   <category>[Blockstream Satellite]/Synchronizers</category>
   <import>import blocksat</import>
-  <make>blocksat.ffw_coarse_freq_req_cc($fft_len, $alpha, $M, $sleep_per, $debug)</make>
+  <make>blocksat.ffw_coarse_freq_req_cc($fft_len, $alpha, $M, $sleep_per, $debug, $frame_len, $sps)</make>
   <callback>get_frequency</callback>
   <callback>reset</callback>
   <param>
@@ -42,9 +42,24 @@
     <key>debug</key>
     <type>bool</type>
   </param>
+  <param>
+    <name>Frame Length</name>
+    <key>frame_len</key>
+    <type>int</type>
+  </param>
+  <param>
+    <name>Samples per Symbol</name>
+    <key>sps</key>
+    <type>int</type>
+  </param>
   <sink>
     <name>in</name>
     <type>complex</type>
+  </sink>
+  <sink>
+    <name>start_index</name>
+    <type>message</type>
+    <optional>1</optional>
   </sink>
   <source>
     <name>out</name>

@@ -44,9 +44,11 @@ namespace gr {
 			 * \param M Constellation order
 			 * \param sleep_per Target sleep period
 			 * \param debug Activate debug prints
+			 * \param frame_len Frame length in symbols
+			 * \param sps Number of samples per symbol
 			 */
 			static sptr make(int fft_len, float alpha, int M, int sleep_per,
-			                 bool debug);
+			                 bool debug, int frame_len, int sps);
 
 			/*!
 			 * \brief Get angular frequency offset

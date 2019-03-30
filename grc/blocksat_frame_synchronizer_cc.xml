@@ -91,6 +91,11 @@
     <vlen>1</vlen>
     <optional>1</optional>
   </source>
+  <source>
+	<name>start_index</name>
+	<type>message</type>
+	<optional>1</optional>
+  </source>
   <doc>Continuous-transmission Correlation-based Frame Synchronization
 
 

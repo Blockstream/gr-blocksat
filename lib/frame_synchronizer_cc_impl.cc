@@ -120,6 +120,9 @@ namespace gr {
 			}
 			d_pmf = new gr::filter::kernel::fir_filter_with_buffer_ccc(d_pmf_taps);
 
+			/* Message port */
+			message_port_register_out(pmt::mp("start_index"));
+
 			/* GR Block configs */
 			set_output_multiple(d_frame_len);
 		}
@@ -241,6 +244,24 @@ namespace gr {
 						       in + i_offset + i_frame_start,
 						       (d_frame_len - i_frame_start) * sizeof(gr_complex));
 						n_produced += (d_frame_len - i_frame_start);
+
+						/* Post the start index to the CFO recovery block
+						 *
+						 * Start with the actual index of the frame
+						 * start. However, since there is a polyphase filter
+						 * bank between the CFO recovery block and the frame
+						 * synchronizer, and since the CFO recovery block
+						 * operates on samples (oversampled), the desirable
+						 * starting point will deviate from the start index that
+						 * was found here. It will deviate due to filter group
+						 * delay and the oversampling ratio. This initial
+						 * message is just an initial guess. The starting index
+						 * to be used by the CFO recovery block is better tuned
+						 * later (below) iteratively.
+						 */
+						d_start_idx_cfo = i_frame_start;
+						message_port_pub(pmt::mp("start_index"),
+						                 pmt::from_long(d_start_idx_cfo));
 					}
 				} else {
 					/* Instead of filtering the entire input buffer in order to
@@ -299,9 +320,49 @@ namespace gr {
 						       d_frame_len * sizeof(gr_complex));
 						n_produced += d_frame_len;
 					}
-				}
 
-				produce(0, n_produced);
+					/* Check the CFO indicated by the CFO recovery block
+					 *
+					 * The CFO recovery block attemps to place this tag on a
+					 * sample that ends up being the symbol corresponding to the
+					 * frame start. Here, the frame synchronizer assesses
+					 * whether this is indeed the case. If not, this block sends
+					 * another frame start index for the CFO block to try in
+					 * order to get closer to the sample corresponding to the
+					 * frame start. */
+					std::vector<tag_t> tags;
+					get_tags_in_window(tags,
+					                   0,
+					                   i_offset + d_i_frame_start - d_preamble_len,
+					                   i_offset + d_i_frame_start + d_preamble_len,
+					                   pmt::mp("cfo"));
+					for (unsigned i = 0; i < tags.size(); i++) {
+						int tag_offset = tags[i].offset - nitems_read(0);
+
+						debug_printf("Got cfo %f at offset %d\tstart idx: %d\n",
+						             pmt::to_float(tags[i].value),
+						             tag_offset,
+						             d_i_frame_start);
+
+						/* Is this offset as expected? */
+						int tag_offset_err = tag_offset - d_i_frame_start;
+						d_start_idx_cfo -= tag_offset_err;
+
+						/* Put start index within [0, frame_len) */
+						d_start_idx_cfo %= d_frame_len;
+						if (d_start_idx_cfo < 0)
+							d_start_idx_cfo += d_frame_len;
+
+						debug_printf("cfo tag offset: %d\tnew start: %d\n",
+						             tag_offset_err, d_start_idx_cfo);
+
+						/* Re-tune start used by subscriber on non-zero error */
+						if (tag_offset_err != 0) {
+							message_port_pub(pmt::mp("start_index"),
+							                 pmt::from_long(d_start_idx_cfo));
+						}
+					}
+				}
 
 				/* Use the magnitude of the PMF peak to derive gain scaling */
 #ifdef DEBUG_GAIN_EQ
@@ -316,11 +377,13 @@ namespace gr {
 				if (d_locked == true && d_en_phase_corr == true)
 				{
 					add_item_tag(0,
-					             nitems_written(0) + i_offset + d_i_frame_start,
+					             nitems_written(0) + d_i_frame_start,
 					             pmt::string_to_symbol("fs_phase_corr"),
 					             pmt::from_float(phase_corr));
 					d_phase_corr = phase_corr;
 				}
+
+				produce(0, n_produced);
 #ifdef DEBUG
 				for (int i = 0; i < d_frame_len; i++) {
 					debug_printf("%s: input symbol %4d\t (%4.4f, %4.4f)\n",
