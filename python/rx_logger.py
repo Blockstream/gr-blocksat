@@ -116,8 +116,15 @@ def print_frame_sync(block_obj, label_setter):
 
 def print_snr(block_obj, label_setter):
 
-    # Get data from the SNR meter block
-    snr_db = block_obj.get_snr()
+    # Check frame sync state first
+    state = block_obj["fs"].get_state()
+
+    # If locked, get data-aided SNR measurement from phase recovery block. If
+    # unlocked, get from the SNR meter block
+    if (state):
+        snr_db = block_obj["phase_rec"].get_snr()
+    else:
+        snr_db = block_obj["mer_meter"].get_snr()
 
     # Print SNR with a bar indicator
     # (each "=" indicates 0.5 dB)
@@ -197,7 +204,7 @@ class rx_logger():
     def __init__(self, samp_rate, snr_meter_obj, snr_log_period,
                  frame_synchronizer_obj, frame_sync_log_period,
                  decoder_obj, ber_log_period, cfo_rec_obj,
-                 cfo_log_period, enabled_start,
+                 cfo_log_period, phase_rec_obj, enabled_start,
                  fs_label_setter, ber_label_setter, fo_label_setter):
 
         global sample_rate
@@ -208,8 +215,15 @@ class rx_logger():
 
         # Declare loggers
 
-        if (snr_meter_obj and snr_log_period > 0):
-            self.snr_logger = Logger(snr_meter_obj,
+        if (snr_meter_obj and phase_rec_obj and frame_synchronizer_obj
+            and snr_log_period > 0):
+            # For the SNR, pass along three different top-level objects
+            snr_objects = {
+                "mer_meter" : snr_meter_obj,
+                "phase_rec" : phase_rec_obj,
+                "fs"        : frame_synchronizer_obj
+            }
+            self.snr_logger = Logger(snr_objects,
                                      snr_log_period,
                                      print_snr,
                                      lock,

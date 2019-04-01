@@ -6,6 +6,7 @@
   <import>import blocksat</import>
   <make>blocksat.da_carrier_phase_rec($preamble_syms, $noise_bw, $damp_factor,
   $M, $data_aided, $reset_per_frame, $tracking_syms, $tracking_interval, $frame_len, $debug_stats)</make>
+  <callback>get_snr()</callback>
   <param>
     <name>Preamble Symbols</name>
     <key>preamble_syms</key>

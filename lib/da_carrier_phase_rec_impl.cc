@@ -429,5 +429,13 @@ namespace gr {
 			// Tell runtime system how many output items we produced.
 			return n_produced;
 		}
+
+		float
+		da_carrier_phase_rec_impl::get_snr() {
+			float avg_lin_mer, avg_db_mer;
+
+			avg_lin_mer  = 1.0f / d_avg_err;
+			return 10.0*log10(avg_lin_mer);
+		}
 	} /* namespace blocksat */
 } /* namespace gr */

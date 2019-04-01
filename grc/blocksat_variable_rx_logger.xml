@@ -16,6 +16,7 @@ self.$(id) = blocksat.rx_logger(
     $ber_log_period,
     $(cfo_rec()),
     $cfo_log_period,
+    $(phase_rec()),
     $enabled_start,
     (None if not hasattr(self, 'set_fs_label') else self.set_fs_label),
     (None if not hasattr(self, 'set_ber_label') else self.set_ber_label),
@@ -75,6 +76,12 @@ self.$(id) = blocksat.rx_logger(
         <key>cfo_log_period</key>
         <value>1</value>
         <type>real</type>
+    </param>
+    <param>
+        <name>Phase Recovery</name>
+        <key>phase_rec</key>
+        <value>None</value>
+        <type>string</type>
     </param>
     <param>
         <name>Enabled Start</name>

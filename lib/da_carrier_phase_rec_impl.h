@@ -126,6 +126,7 @@ namespace gr {
 
 			float set_K1(float zeta, float Bn_Ts);
 			float set_K2(float zeta, float Bn_Ts);
+			float get_snr();
 		};
 
 	} // namespace blocksat
