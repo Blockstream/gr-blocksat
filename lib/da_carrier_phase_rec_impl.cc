@@ -96,7 +96,8 @@ namespace gr {
 			d_avg_err(0.0),
 			d_n_sym_err(0.0),
 			d_n_sym_tot(0.0),
-			d_fs_phase(0.0)
+			d_fs_phase(0.0),
+			d_fs_fine_cfo(0.0)
 		{
 			d_preamble_syms.resize(preamble_syms.size());
 			d_preamble_syms = preamble_syms;
@@ -244,9 +245,13 @@ namespace gr {
 			/* Check the phase rotation indicated by the frame synchronizer
 			 * NOTE: this tag should be on the very first symbol of the frame */
 			std::vector<tag_t> tags;
-			get_tags_in_window(tags, 0, 0, 1, pmt::mp("fs_phase_corr"));
+			get_tags_in_window(tags, 0, 0, 1);
 			for (unsigned i = 0; i < tags.size(); i++) {
-				d_fs_phase = pmt::to_float(tags[i].value);
+				if (pmt::symbol_to_string(tags[i].key) == "fs_phase") {
+					d_fs_phase = pmt::to_float(tags[i].value);
+				} else if  (pmt::symbol_to_string(tags[i].key) == "fs_fine_cfo") {
+					d_fs_fine_cfo = pmt::to_float(tags[i].value);
+				}
 			}
 
 			/* Frame-by-frame processing
@@ -264,7 +269,7 @@ namespace gr {
 				// Reset the loop state for each frame, if so desired
 				if (d_reset_per_frame) {
 					d_nco_phase  = d_fs_phase; // Reset the NCO phase accumulator
-					d_integrator = 0.0; // Reset the integrator
+					d_integrator = 2 * M_PI * d_fs_fine_cfo; // Reset the integrator
 				}
 
 				/* Preamble */

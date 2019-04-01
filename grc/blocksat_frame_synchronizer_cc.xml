@@ -11,7 +11,8 @@
   $n_success_to_lock,
   $en_eq,
   $en_phase_corr,
-  $verbose)</make>
+  $verbose,
+  $en_freq_corr)</make>
   <callback>get_mag_pmf_peak()</callback>
   <callback>get_state()</callback>
   <param>
@@ -60,6 +61,19 @@
   <param>
     <name>Phase Correction</name>
     <key>en_phase_corr</key>
+    <type>bool</type>
+    <option>
+      <name>Disabled</name>
+      <key>False</key>
+    </option>
+    <option>
+      <name>Enabled</name>
+      <key>True</key>
+    </option>
+  </param>
+  <param>
+    <name>Freq. Correction</name>
+    <key>en_freq_corr</key>
     <type>bool</type>
     <option>
       <name>Disabled</name>
