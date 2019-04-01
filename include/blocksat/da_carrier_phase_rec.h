@@ -29,7 +29,7 @@ namespace gr {
   namespace blocksat {
 
     /*!
-     * \brief <+description of block+>
+     * \brief Data-aided carrier phase recovery
      * \ingroup blocksat
      *
      */
@@ -39,18 +39,26 @@ namespace gr {
       typedef boost::shared_ptr<da_carrier_phase_rec> sptr;
 
       /*!
-       * \brief Return a shared_ptr to a new instance of blocksat::da_carrier_phase_rec.
+       * \brief Make data-aided carrier phase recovery block
        *
-       * To avoid accidental use of raw pointers, blocksat::da_carrier_phase_rec's
-       * constructor is in a private implementation
-       * class. blocksat::da_carrier_phase_rec::make is the public interface for
-       * creating new instances.
+       * \param preamble_syms Complex vector with preamble symbols
+       * \param noise_bw Target noise bandwidth for the PI control loop
+       * \param damp_factor Target damping factor for the PI control loop
+       * \param M Constellation order
+       * \param data_aided Activates purely data-aided operation
+       * \param reset_per_frame Reset state on every frame
+       * \param tracking_syms Complex vector with tracking symbols
+       * \param tracking_interval Interval between tracking sequences
+       * \param frame_len Frame length in symbols
+       * \param debug_stats Activates printing of debug statistics
+       * \param alpha Controls the SNR averaging
        */
       static sptr make(const std::vector<gr_complex> &preamble_syms,
                        float noise_bw, float damp_factor, int M,
                        bool data_aided, bool reset_per_frame,
                        const std::vector<gr_complex> &tracking_syms,
-                       int tracking_interval, int frame_len, bool debug_stats);
+                       int tracking_interval, int frame_len, bool debug_stats,
+                       float alpha);
 
       /*!
        * \brief Get data-aided SNR measurement

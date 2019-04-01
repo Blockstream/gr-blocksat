@@ -114,7 +114,7 @@ namespace gr {
 			                          bool data_aided, bool reset_per_frame,
 			                          const std::vector<gr_complex> &tracking_syms,
 			                          int tracking_interval, int frame_len,
-			                          bool debug_stats);
+			                          bool debug_stats, float alpha);
 			~da_carrier_phase_rec_impl();
 
 			// Where all the action really happens
