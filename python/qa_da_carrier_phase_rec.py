@@ -38,6 +38,8 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
 
     def test_001_t (self):
         """A single frame"""
+
+        # Block parameters
         preamble_syms     = ((1+0j), (-1 + 0j), (1 + 0j), (-1 + 0j),
                              (1 + 0j), (-1 + 0j))
         noise_bw          = 0.1
@@ -45,7 +47,6 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
         const_order       = 2
         data_aided_only   = False
         reset_per_frame   = True
-        debug_stats       = False
         tracking_syms     = ((1 + 0j), (1 + 0j), (-1 + 0j), (-1 + 0j))
         tracking_interval = 2
         data_len          = 5
@@ -53,6 +54,10 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
         frame_len         = int(len(preamble_syms) + \
                             (n_tracking_seqs * len(tracking_syms)) + \
                             data_len)
+        debug_stats       = False
+        alpha             = 1.0
+
+        # Constants
         data_syms         = ((-1 + 0j), (1 + 0j), (1 + 0j), (-1 + 0j),
                              (-1 + 0j))
         src_data          = preamble_syms + ((-1 + 0j), (1 + 0j)) + \
@@ -70,7 +75,8 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
                                                           tracking_syms,
                                                           tracking_interval,
                                                           frame_len,
-                                                          debug_stats)
+                                                          debug_stats,
+                                                          alpha)
         dst1              = blocks.vector_sink_c()
         dst2              = blocks.vector_sink_f()
 
@@ -87,6 +93,8 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
 
     def test_002_t (self):
         """Several frames - repeated data"""
+
+        # Block parameters
         preamble_syms     = ((1+0j), (-1 + 0j), (1 + 0j), (-1 + 0j),
                              (1 + 0j), (-1 + 0j))
         noise_bw          = 0.1
@@ -94,7 +102,6 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
         const_order       = 2
         data_aided_only   = False
         reset_per_frame   = True
-        debug_stats       = False
         tracking_syms     = ((1 + 0j), (1 + 0j), (-1 + 0j), (-1 + 0j))
         tracking_interval = 2
         data_len          = 5
@@ -102,6 +109,10 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
         frame_len         = int(len(preamble_syms) + \
                             (n_tracking_seqs * len(tracking_syms)) + \
                             data_len)
+        debug_stats       = False
+        alpha             = 1.0
+
+        # Constants
         data_syms         = ((-1 + 0j), (1 + 0j), (1 + 0j), (-1 + 0j),
                              (-1 + 0j))
         n_frames          = 50
@@ -122,7 +133,8 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
                                                           tracking_syms,
                                                           tracking_interval,
                                                           frame_len,
-                                                          debug_stats)
+                                                          debug_stats,
+                                                          alpha)
         dst1              = blocks.vector_sink_c()
         dst2              = blocks.vector_sink_f()
 
@@ -150,6 +162,7 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
         tracking_interval = 20
         data_len          = 100
         n_frames          = 50
+        alpha             = 1.0
 
         # Constants and other derivated paramters
         if (modulation == "bpsk"):
@@ -207,7 +220,8 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
                                                           tracking_syms,
                                                           tracking_interval,
                                                           frame_len,
-                                                          debug_stats)
+                                                          debug_stats,
+                                                          alpha)
         dst1              = blocks.vector_sink_c()
         dst2              = blocks.vector_sink_f()
 

@@ -58,13 +58,13 @@ namespace gr {
 		                           bool data_aided, bool reset_per_frame,
 		                           const std::vector<gr_complex> &tracking_syms,
 		                           int tracking_interval, int frame_len,
-		                           bool debug_stats)
+		                           bool debug_stats, float alpha)
 		{
 			return gnuradio::get_initial_sptr
 				(new da_carrier_phase_rec_impl(preamble_syms, noise_bw, damp_factor, M,
 				                               data_aided, reset_per_frame,
 				                               tracking_syms, tracking_interval,
-				                               frame_len, debug_stats));
+				                               frame_len, debug_stats, alpha));
 		}
 
 		/*
@@ -76,7 +76,7 @@ namespace gr {
 			const std::vector<gr_complex> &preamble_syms, float noise_bw,
 			float damp_factor, int M, bool data_aided, bool reset_per_frame,
 			const std::vector<gr_complex> &tracking_syms, int tracking_interval,
-			int frame_len, bool debug_stats)
+			int frame_len, bool debug_stats, float alpha)
 			: gr::block("da_carrier_phase_rec",
 			            io_signature::make(1, 1, sizeof(gr_complex)),
 			            io_signature::makev(2, 2, osig)),
@@ -91,8 +91,8 @@ namespace gr {
 			d_frame_len(frame_len),
 			d_const(M),
 			d_debug_stats(debug_stats),
-			d_alpha(0.001),
-			d_beta(1 - 0.001),
+			d_alpha(alpha),
+			d_beta(1.0f - alpha),
 			d_avg_err(0.0),
 			d_n_sym_err(0.0),
 			d_n_sym_tot(0.0),
