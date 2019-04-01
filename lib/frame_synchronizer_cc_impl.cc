@@ -27,12 +27,14 @@
 #include <volk/volk.h>
 #include <chrono>
 #include <ctime>
+#include <gnuradio/expj.h>
 #include "frame_synchronizer_cc_impl.h"
 
 #undef DEBUG
 #undef INFO
 #undef DEBUG_PHASE_CORR
 #undef DEBUG_GAIN_EQ
+#undef DEBUG_FINE_FREQ_REC
 
 #ifdef DEBUG
 #define debug_printf printf
@@ -53,12 +55,13 @@ namespace gr {
 		frame_synchronizer_cc::make(
 			const std::vector<gr_complex> &preamble_syms,
 			int frame_len, int M, int n_success_to_lock,
-			bool en_eq, bool en_phase_corr, bool verbose)
+			bool en_eq, bool en_phase_corr, bool verbose,
+			bool en_freq_corr)
 		{
 			return gnuradio::get_initial_sptr
 				(new frame_synchronizer_cc_impl(
 					preamble_syms, frame_len, M, n_success_to_lock, en_eq,
-					en_phase_corr, verbose));
+					en_phase_corr, verbose, en_freq_corr));
 		}
 
 		/*
@@ -67,7 +70,7 @@ namespace gr {
 		frame_synchronizer_cc_impl::frame_synchronizer_cc_impl(
 			const std::vector<gr_complex> &preamble_syms,
 			int frame_len, int M, int n_success_to_lock,
-			bool en_eq, bool en_phase_corr, bool verbose)
+			bool en_eq, bool en_phase_corr, bool verbose, bool en_freq_corr)
 			: gr::block("frame_synchronizer_cc",
 			            gr::io_signature::make(1, 1, sizeof(gr_complex)),
 			            gr::io_signature::make2(1, 2, sizeof(gr_complex),
@@ -78,6 +81,7 @@ namespace gr {
 			d_en_eq(en_eq),
 			d_en_phase_corr(en_phase_corr),
 			d_verbose(verbose),
+			d_en_freq_corr(en_freq_corr),
 			d_i_frame(0),
 			d_i_frame_start(0),
 			d_last_i_frame_start(0),
@@ -86,7 +90,9 @@ namespace gr {
 			d_fail_cnt(0),
 			d_mag_pmf_peak(0.0),
 			d_eq_gain(1.0),
-			d_phase_corr(2 * M_PI) /* initial value purposely non-zero */
+			d_alpha(0.1),
+			d_beta(1.0 - 0.1),
+			d_avg_freq_offset(0.0)
 		{
 			/* Constants
 			 *
@@ -120,6 +126,24 @@ namespace gr {
 			}
 			d_pmf = new gr::filter::kernel::fir_filter_with_buffer_ccc(d_pmf_taps);
 
+			/* Buffers used for fine freq. offset estimation */
+			d_L = d_preamble_len/2; // set weight window length to half preamble
+			d_preamble_mod_rm  = (gr_complex*) volk_malloc(d_preamble_len * sizeof(gr_complex), d_align);
+			d_preamble_corr    = (gr_complex*) volk_malloc((d_L + 1) * sizeof(gr_complex), d_align);
+			d_angle            = (float*) volk_malloc((d_L + 1) * sizeof(float), d_align);
+			d_angle_diff       = (float*) volk_malloc(d_L * sizeof(float), d_align);
+			d_w_window         = (float*) volk_malloc(d_L * sizeof(float), d_align);
+			d_w_angle_diff     = (float*) volk_malloc(d_L * sizeof(float), d_align);
+			d_w_angle_avg      = (float*) volk_malloc(sizeof(float), d_align);
+			d_fc_preamble_syms = (gr_complex*) volk_malloc(d_preamble_len * sizeof(gr_complex), d_align);
+
+			/* Fine freq. offset estimation weighting function*/
+			for (int m = 0; m < d_L; m++) {
+				d_w_window[m] = 3.0 * ((2*d_L + 1.0)*(2*d_L + 1.0) -
+				                       (2*m + 1.0)*(2*m + 1.0)) /
+					(((2*d_L + 1.0)*(2*d_L + 1.0) - 1)*(2*d_L + 1));
+			}
+
 			/* Message port */
 			message_port_register_out(pmt::mp("start_index"));
 
@@ -135,6 +159,14 @@ namespace gr {
 			volk_free(d_pmf_out_buffer);
 			volk_free(d_mag_pmf_buffer);
 			volk_free(d_i_max);
+			volk_free(d_preamble_mod_rm);
+			volk_free(d_preamble_corr);
+			volk_free(d_angle);
+			volk_free(d_angle_diff);
+			volk_free(d_w_window);
+			volk_free(d_w_angle_diff);
+			volk_free(d_w_angle_avg);
+			volk_free(d_fc_preamble_syms);
 			delete d_pmf;
 		}
 
@@ -155,6 +187,92 @@ namespace gr {
 			std::cout << "-- On " << std::ctime(&now_time);
 		}
 
+		float
+		frame_synchronizer_cc_impl::est_freq_offset(const gr_complex *in)
+		{
+			gr_complex r_sum;
+			float freq_offset = 0;
+			int N = d_preamble_len;
+
+			/* "Remove" modulation */
+			volk_32fc_x2_multiply_32fc(d_preamble_mod_rm, in, d_pmf_tap_buffer, N);
+
+#ifdef DEBUG_FINE_FREQ_REC
+			printf("Rx preamble:\n");
+			printf("[");
+			for (int i = 0; i < N-1; i++)
+			{
+				printf("(%f + 1j*%f), ...\n", in[i].real(), in[i].imag());
+			}
+			printf("(%f + 1j*%f)]\n", in[N-1].real(), in[N-1].imag());
+			printf("Correlation:\n");
+			printf("[");
+#endif
+
+			/* Auto-correlation of the "modulation-removed" symbols
+			 *
+			 * m is the lag of the auto-correlation; compute L + 1 values.
+			 */
+			for (int m = 1; m < (d_L + 2); m++)
+			{
+				volk_32fc_x2_conjugate_dot_prod_32fc(&r_sum,
+				                                     d_preamble_mod_rm + m,
+				                                     d_preamble_mod_rm,
+				                                     (N-m));
+				d_preamble_corr[m-1] = (1.0f/(N - m)) * r_sum;
+
+				/* Angle of the correlation */
+				d_angle[m-1] = gr::fast_atan2f(d_preamble_corr[m-1]);
+
+#ifdef DEBUG_FINE_FREQ_REC
+				if (m == d_L)
+					printf("%f]\n", d_angle[m-1]);
+				else
+					printf("%f, ", d_angle[m-1]);
+#endif
+			}
+
+			/* Angle differences
+			 *
+			 * NOTE: from L + 1 auto-corr values, there are L differences
+			 */
+			volk_32f_x2_subtract_32f(d_angle_diff, d_angle + 1, d_angle, d_L);
+
+			/* Put angle differences within [-pi, pi]
+			 *
+			 * NOTE: the problem for this wrapping is when the angle is
+			 * oscillating near 180 degrees, in which case it oscillates
+			 * from -pi to pi. In contrast, when the angle is put within
+			 * [0, 2*pi], the analogous problem is when the angle
+			 * oscillates near 0 degress, namely between 0 and
+			 * 2*pi. Since due to the coarse freq. offset recovery the
+			 * residual fine CFO is expected to be low, we can assume
+			 * the angle won't be near 180 degrees. Hence, it is better
+			 * to wrap the angle within [-pi, pi] range.
+			 */
+			for (int m = 0; m < d_L; m++)
+			{
+				if (d_angle_diff[m] > M_PI)
+					d_angle_diff[m] -= 2*M_PI;
+				else if (d_angle_diff[m] < -M_PI)
+					d_angle_diff[m] += 2*M_PI;
+			}
+
+			/* Weighted average */
+			volk_32f_x2_multiply_32f(d_w_angle_diff, d_angle_diff, d_w_window, d_L);
+
+			/* Sum of weighted average */
+			volk_32f_accumulator_s32f(d_w_angle_avg, d_w_angle_diff, d_L);
+
+			/* Final freq offset estimate
+			 *
+			 * Due to angle in range [-pi,pi], the freq. offset lies within
+			 * [-0.5,0.5]. Enforce that to avoid numerical problems.
+			 */
+			freq_offset = *d_w_angle_avg / (2*M_PI);
+			return branchless_clip(freq_offset, 0.5f);
+		}
+
 		int
 		frame_synchronizer_cc_impl::general_work (int noutput_items,
 		                                          gr_vector_int &ninput_items,
@@ -169,7 +287,9 @@ namespace gr {
 			int i_offset;
 			int i_frame_start = 0;
 			gr_complex pmf_peak;
-			float phase_corr;
+			float pmf_peak_phase;
+			gr_complex phasor, phasor_0;
+			float freq_offset;
 
 			/* Frame-by-frame processing */
 			for (int i_frame = 0; i_frame < n_frames; i_frame++) {
@@ -209,8 +329,8 @@ namespace gr {
 					info_printf("success count = %d\n", d_success_cnt);
 
 					if (d_verbose) {
-						printf("%s:\tMatched peaks = %d / %d\t",
-						       "[Frame Sync]", d_success_cnt,
+						printf("%-21s Matched peaks = %d / %d\t",
+						       "[Frame Synchronizer ]", d_success_cnt,
 						       d_n_success_to_lock);
 						printf("Previous peak idx: %5d\tCurrent peak idx: %5d\n",
 						       d_last_i_frame_start, i_frame_start);
@@ -257,12 +377,96 @@ namespace gr {
 						                 pmt::from_long(d_start_idx_cfo));
 					}
 				} else {
+					/* Check the CFO indicated by the CFO recovery block
+					 *
+					 * The CFO recovery block attemps to place this tag on a
+					 * sample that ends up being the symbol corresponding to the
+					 * frame start. Here, the frame synchronizer assesses
+					 * whether this is indeed the case. If not, this block sends
+					 * another frame start index for the CFO block to try in
+					 * order to get closer to the sample corresponding to the
+					 * frame start. */
+					std::vector<tag_t> tags;
+					get_tags_in_window(tags,
+					                   0,
+					                   i_offset + d_i_frame_start - d_preamble_len,
+					                   i_offset + d_i_frame_start + d_preamble_len,
+					                   pmt::mp("cfo"));
+					for (unsigned i = 0; i < tags.size(); i++) {
+						int tag_offset = tags[i].offset - nitems_read(0);
+
+						/* Is this offset as expected? */
+						int tag_offset_err = tag_offset - d_i_frame_start;
+						d_start_idx_cfo -= tag_offset_err;
+
+						/* Debug */
+						if (d_verbose) {
+							printf("%-21s Got CFO tag at offset: %d\t",
+							       "[Frame Synchronizer ]", tag_offset);
+							printf("Expected: %d (error %d)\tSend new start: %d\n",
+							       d_i_frame_start, tag_offset_err,
+							       d_start_idx_cfo);
+						}
+
+						/* Re-tune start used by subscriber on non-zero error */
+						if (tag_offset_err != 0) {
+							message_port_pub(pmt::mp("start_index"),
+							                 pmt::from_long(d_start_idx_cfo));
+						}
+
+						/* Reset fine frequency offset average when the coarse
+						 * CFO correction changes (which happens whenever a tag
+						 * comes) */
+						d_avg_freq_offset = 0.0;
+					}
+
+					/* Estimate new fine frequency offset and update average */
+					if (d_en_freq_corr) {
+						freq_offset       = est_freq_offset(in + i_offset + d_i_frame_start);
+						d_avg_freq_offset = (d_alpha * freq_offset) + (d_beta * d_avg_freq_offset);
+
+						/* Send average downstream via tag */
+						add_item_tag(0,
+						             nitems_written(0) + d_i_frame_start,
+						             pmt::string_to_symbol("fs_fine_cfo"),
+						             pmt::from_float(d_avg_freq_offset));
+
+						/* Debug */
+						if (d_verbose) {
+							printf("%-21s Fine freq. offset: % 8.6f\tAvg: % 8.6f\n",
+							       "[Frame Synchronizer ]", freq_offset,
+							       d_avg_freq_offset);
+						}
+					}
+
+					/*
+					 * De-rotate preamble symbols to boost the PMF peak
+					 *
+					 * Use the estimated fine freq. offset estimation to
+					 * de-rotate.
+					 *
+					 * NOTE: although helpful, the benefit from applying the
+					 * fine frequency correction is small. The PMF peak is more
+					 * significantly impacted by the noise level.
+					 *
+					 * NOTE 2: this correction also helps with the estimation of
+					 * the PMF peak phase that is reported dowstream.
+					 */
+					phasor   = gr_expj(-2 * M_PI * d_avg_freq_offset);
+					phasor_0 = gr_expj(0.0);
+					volk_32fc_s32fc_x2_rotator_32fc(d_fc_preamble_syms,
+					                                in + i_offset + d_i_frame_start,
+					                                phasor,
+					                                &phasor_0,
+					                                d_preamble_len);
+
 					/* Instead of filtering the entire input buffer in order to
-					 * compute the cross-correlation, compute the
-					 * cross-correlation value solely at the index of interest,
-					 * i.e. the frame start index */
-					volk_32fc_x2_dot_prod_32fc(&pmf_peak, in + i_offset +
-					                           d_i_frame_start,
+					 * compute the cross-correlation (preamble matched
+					 * filtering), compute the cross-correlation value solely at
+					 * the index of interest, i.e. the frame start index.
+					 */
+					volk_32fc_x2_dot_prod_32fc(&pmf_peak,
+					                           d_fc_preamble_syms,
 					                           d_pmf_tap_buffer,
 					                           d_preamble_len);
 					/* NOTE: the above dot product is an element-wise product
@@ -280,8 +484,8 @@ namespace gr {
 						info_printf("failure count = %d\n", d_fail_cnt);
 
 						if (d_verbose) {
-							printf("%s:\tUnmatched peaks = %d / %d\t",
-							       "[Frame Sync]", d_fail_cnt,
+							printf("%-21s Unmatched peaks = %d / %d\t",
+							       "[Frame Synchronizer ]", d_fail_cnt,
 							       d_n_success_to_lock);
 							printf("Locked to idx: %5d\tCorr Magnitude: %f\n",
 							       d_i_frame_start, d_mag_pmf_peak);
@@ -313,42 +517,6 @@ namespace gr {
 						       d_frame_len * sizeof(gr_complex));
 						n_produced += d_frame_len;
 					}
-
-					/* Check the CFO indicated by the CFO recovery block
-					 *
-					 * The CFO recovery block attemps to place this tag on a
-					 * sample that ends up being the symbol corresponding to the
-					 * frame start. Here, the frame synchronizer assesses
-					 * whether this is indeed the case. If not, this block sends
-					 * another frame start index for the CFO block to try in
-					 * order to get closer to the sample corresponding to the
-					 * frame start. */
-					std::vector<tag_t> tags;
-					get_tags_in_window(tags,
-					                   0,
-					                   i_offset + d_i_frame_start - d_preamble_len,
-					                   i_offset + d_i_frame_start + d_preamble_len,
-					                   pmt::mp("cfo"));
-					for (unsigned i = 0; i < tags.size(); i++) {
-						int tag_offset = tags[i].offset - nitems_read(0);
-
-						debug_printf("Got cfo %f at offset %d\tstart idx: %d\n",
-						             pmt::to_float(tags[i].value),
-						             tag_offset,
-						             d_i_frame_start);
-
-						/* Is this offset as expected? */
-						int tag_offset_err = tag_offset - d_i_frame_start;
-						d_start_idx_cfo -= tag_offset_err;
-						debug_printf("cfo tag offset: %d\tnew start: %d\n",
-						             tag_offset_err, d_start_idx_cfo);
-
-						/* Re-tune start used by subscriber on non-zero error */
-						if (tag_offset_err != 0) {
-							message_port_pub(pmt::mp("start_index"),
-							                 pmt::from_long(d_start_idx_cfo));
-						}
-					}
 				}
 
 				/* Use the magnitude of the PMF peak to derive gain scaling */
@@ -357,17 +525,16 @@ namespace gr {
 				printf("Gain EQ\t%f\n", d_eq_gain);
 #endif
 
-				/* Use the complex-valued PMF peak to derive the phase error */
-				phase_corr = gr::fast_atan2f(pmf_peak);
-
 				/* Tag phase correction */
 				if (d_locked == true && d_en_phase_corr == true)
 				{
+					/* Use the PMF peak to derive the phase error */
+					pmf_peak_phase = gr::fast_atan2f(pmf_peak);
+
 					add_item_tag(0,
 					             nitems_written(0) + d_i_frame_start,
-					             pmt::string_to_symbol("fs_phase_corr"),
-					             pmt::from_float(phase_corr));
-					d_phase_corr = phase_corr;
+					             pmt::string_to_symbol("fs_phase"),
+					             pmt::from_float(pmf_peak_phase));
 				}
 
 				produce(0, n_produced);

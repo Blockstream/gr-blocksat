@@ -39,6 +39,7 @@ namespace gr {
 			bool d_en_eq;
 			bool d_en_phase_corr;
 			bool d_verbose;
+			bool d_en_freq_corr;
 			/* Other private variables */
 			gr::filter::kernel::fir_filter_with_buffer_ccc* d_pmf;
 			int           d_i_frame;
@@ -57,22 +58,27 @@ namespace gr {
 			unsigned int  d_complex_frame_size_bytes;
 			float         d_mag_pmf_peak;
 			float         d_eq_gain;
-			float         d_phase_corr;
-			const float   d_phase_corr_lut[6] = {
-				-M_PI,
-				0.0,
-				-M_PI,
-				-M_PI/2,
-				M_PI/2,
-				0.0
-			};
 			int           d_start_idx_cfo;
+			int           d_L;
+			gr_complex   *d_preamble_mod_rm;
+			gr_complex   *d_preamble_corr;
+			float        *d_angle;
+			float        *d_angle_diff;
+			float        *d_w_window;
+			float        *d_w_angle_diff;
+			float        *d_w_angle_avg;
+			gr_complex   *d_fc_preamble_syms;
+			float         d_alpha;
+			float         d_beta;
+			float         d_avg_freq_offset;
+
+			float est_freq_offset(const gr_complex *in);
 
 		public:
 			frame_synchronizer_cc_impl(
 				const std::vector<gr_complex> &preamble_syms, int frame_len,
 				int M, int n_success_to_lock, bool en_eq,
-				bool en_phase_corr, bool verbose);
+				bool en_phase_corr, bool verbose, bool en_freq_corr);
 			~frame_synchronizer_cc_impl();
 
 			// Where all the action really happens

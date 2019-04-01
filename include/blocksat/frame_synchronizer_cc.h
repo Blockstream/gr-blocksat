@@ -46,10 +46,12 @@ namespace gr {
 			 * \param en_eq Enable gain scaling
 			 * \param en_phase_corr Enable phase correction per frame
 			 * \param verbose Activate verbose mode
+			 * \param en_freq_corr Enable fine frequency correction
 			 */
 			static sptr make(const std::vector<gr_complex> &preamble_syms,
 			                 int frame_len, int M, int n_success_to_lock,
-			                 bool en_eq, bool en_phase_corr, bool verbose);
+			                 bool en_eq, bool en_phase_corr, bool verbose,
+			                 bool en_freq_corr);
 
 			/*!
 			 * \brief Get magnitude of PMF peak

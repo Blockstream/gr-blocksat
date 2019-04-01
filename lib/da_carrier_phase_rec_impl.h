@@ -93,7 +93,8 @@ namespace gr {
 			float d_avg_err;
 			float d_n_sym_err;
 			float d_n_sym_tot;
-			float d_fs_phase; /* phase error detected by frame sync */
+			float d_fs_phase; /* phase error estimated by frame sync */
+			float d_fs_fine_cfo; /* fine CFO estimated by frame sync */
 
 			/*
 			 * \brief Update the PI loop
@@ -104,8 +105,8 @@ namespace gr {
 			 *  \param float detected error
 			 */
 			inline void loop_step(float error) {
-				d_integrator = (error * d_K2) + d_integrator;
-				d_nco_phase  = d_nco_phase + (error * d_K1) + d_integrator;
+				d_integrator += (error * d_K2);
+				d_nco_phase  += (error * d_K1) + d_integrator;
 			}
 
 		public:
