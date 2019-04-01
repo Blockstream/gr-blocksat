@@ -86,6 +86,7 @@ namespace gr {
 			int d_payload_len;
 			int d_frame_len;
 			int d_data_len;
+			int d_full_tracking_len;
 			Constellation d_const;
 			bool d_debug_stats;
 			float d_alpha;

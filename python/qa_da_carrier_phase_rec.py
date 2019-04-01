@@ -54,7 +54,7 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
         frame_len         = int(len(preamble_syms) + \
                             (n_tracking_seqs * len(tracking_syms)) + \
                             data_len)
-        debug_stats       = False
+        debug_stats       = True
         alpha             = 1.0
 
         # Constants
@@ -109,7 +109,7 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
         frame_len         = int(len(preamble_syms) + \
                             (n_tracking_seqs * len(tracking_syms)) + \
                             data_len)
-        debug_stats       = False
+        debug_stats       = True
         alpha             = 1.0
 
         # Constants
@@ -158,7 +158,7 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
         damp_factor       = 0.707
         data_aided_only   = False
         reset_per_frame   = True
-        debug_stats       = False
+        debug_stats       = True
         tracking_interval = 20
         data_len          = 100
         n_frames          = 50
@@ -230,7 +230,7 @@ class qa_da_carrier_phase_rec (gr_unittest.TestCase):
         self.tb.connect((phase_rec, 1), dst2)
         self.tb.run()
         result_data = dst1.data()
-        print("Full result:", result_data)
+        #print("Full result:", result_data)
         self.assertComplexTuplesAlmostEqual(expected_result,
                                             result_data,
                                             6)

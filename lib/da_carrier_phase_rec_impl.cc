@@ -120,6 +120,7 @@ namespace gr {
 				d_n_tracking_seqs = 0;
 				d_data_len = d_payload_len;
 			}
+			d_full_tracking_len = d_n_tracking_seqs * d_tracking_len;
 
 			d_K1 = set_K1(damp_factor, noise_bw);
 			d_K2 = set_K2(damp_factor, noise_bw);
@@ -230,10 +231,15 @@ namespace gr {
 			float phi_error;
 			gr_complex e_k;
 			float norm_e_k;
-			float p_lin_mer, avg_lin_mer, p_db_mer, avg_db_mer;
+			float p_lin_mer, p_db_mer;          /* Preamble average MER */
 			float p_avg_err = 0;
-			int   n_p_sym_err = 0;
+			float t_lin_mer, t_db_mer;          /* Tracking segment avg MER */
+			float t_avg_err = 0;
+			float t_a_lin_mer, t_a_db_mer;      /* Avg MER of all tracking */
+			float t_a_avg_err = 0;
+			int   n_p_sym_err = 0;              /* Preamble SER measurement */
 			float p_ser, avg_ser;
+			float avg_lin_mer, avg_db_mer;      /* Preamble+tracking avg MER */
 			int n_consumed = 0, n_produced = 0;
 			int n_frames = noutput_items / d_data_len;
 
@@ -319,30 +325,30 @@ namespace gr {
 					i++;
 				}
 
-				/* Finish and print preamble stats
+				/* Preamble stats
 				 *
 				 * The average MER and SER are computed both for the current
 				 * preamble only and considering all preamble symbols ever
 				 * received.
 				 */
 				if (d_debug_stats) {
+					/* MER */
 					p_avg_err   /= float(d_preamble_len);  // preamble avg error
 					p_lin_mer    = 1.0f / p_avg_err;       // preamble lin MER
-					avg_lin_mer  = 1.0f / d_avg_err;       // all time avg MER
 					p_avg_err    = 0.0;                    // reset preamble avg
 					p_db_mer     = 10.0*log10(p_lin_mer);   // preamble dB MER
-					avg_db_mer   = 10.0*log10(avg_lin_mer); // all time dB MER
+					/* symbol error rate */
 					d_n_sym_err += float(n_p_sym_err);
 					d_n_sym_tot += float(d_preamble_len);
 					p_ser        = float(n_p_sym_err) / float(d_preamble_len);
-					avg_ser      = d_n_sym_err / d_n_sym_tot;
 					n_p_sym_err  = 0;
-					printf("[Preamble Statistics]\tMER: %4.2f dB (avg %4.2f dB)\tSER: %.2e (avg %.2e)\n",
-					       p_db_mer, avg_db_mer, p_ser, avg_ser);
+					printf("%-21s Preamble SNR dB: % 5.2f\tSER: %.2e\tTracking SNR dB ",
+					       "[Preamble Statistics]", p_db_mer, p_ser);
 				}
 
 				/* Payload */
 				int j = 0;
+				int i_tracking = 0;
 				while (j < d_payload_len) {
 					/* Data symbols */
 					for (int k = 0;
@@ -404,6 +410,13 @@ namespace gr {
 						conj_prod_err = x_derotated * conj(d_tracking_syms[k]);
 						phi_error = gr::fast_atan2f(conj_prod_err);
 
+						/* Add to the all-time average MER measurement */
+						e_k          = x_derotated - d_tracking_syms[k];
+						norm_e_k     = (e_k.real() * e_k.real()) + (e_k.imag() * e_k.imag());
+						t_avg_err   += norm_e_k;
+						t_a_avg_err += norm_e_k;
+						d_avg_err    = (d_beta * d_avg_err) + (d_alpha * norm_e_k);
+
 						/* PI loop update */
 						loop_step(phi_error);
 
@@ -422,6 +435,33 @@ namespace gr {
 						j++;
 						i++;
 					}
+
+					/* Statistics of this tracking segment */
+					if (d_debug_stats) {
+						t_avg_err /= float(d_tracking_len); // tracking avg error
+						t_lin_mer  = 1.0f / t_avg_err;      // tracking lin MER
+						t_avg_err  = 0.0;                   // reset tracking avg
+						t_db_mer   = 10.0*log10(t_lin_mer); // tracking dB MER
+						printf("%d: % 5.2f\t", i_tracking, t_db_mer);
+						i_tracking++;
+					}
+				}
+
+				/* All-time average */
+				if (d_debug_stats) {
+					/* All tracking segments together */
+					t_a_avg_err /= float(d_full_tracking_len);
+					t_a_lin_mer  = 1.0f / t_a_avg_err;
+					t_a_avg_err  = 0.0;
+					t_a_db_mer   = 10.0*log10(t_a_lin_mer);
+
+					/* All DA segments (tracking + preamble) */
+					avg_lin_mer  = 1.0f / d_avg_err;        // all time avg MER
+					avg_db_mer   = 10.0*log10(avg_lin_mer); // all time dB MER
+					avg_ser      = d_n_sym_err / d_n_sym_tot;
+					printf("Tracking Avg SNR dB: % 5.2f\t", t_a_db_mer);
+					printf("Avg SNR dB: % 5.2f\tSER %.2e\n", avg_db_mer,
+					       avg_ser);
 				}
 			}
 
