@@ -30,105 +30,132 @@
 #include "mer_measurement_impl.h"
 
 namespace gr {
-  namespace blocksat {
+	namespace blocksat {
 
-    mer_measurement::sptr
-    mer_measurement::make(float alpha, int M)
-    {
-      return gnuradio::get_initial_sptr
-        (new mer_measurement_impl(alpha, M));
-    }
+		mer_measurement::sptr
+		mer_measurement::make(float alpha, int M, int frame_len)
+		{
+			return gnuradio::get_initial_sptr
+				(new mer_measurement_impl(alpha, M, frame_len));
+		}
 
-    /*
-     * The private constructor
-     */
-    mer_measurement_impl::mer_measurement_impl(float alpha, int M)
-      : gr::sync_block("mer_measurement",
-              gr::io_signature::make(1, 1, sizeof(gr_complex)),
-              gr::io_signature::make(1, 1, sizeof(float))),
-        d_M(M), // Constellation Order
-        d_snr_db(0.0),
-        d_const(M)
-    {
-      set_alpha(alpha);
-    }
+		/*
+		 * The private constructor
+		 */
+		mer_measurement_impl::mer_measurement_impl(float alpha, int M,
+		                                           int frame_len)
+			: gr::sync_decimator("mer_measurement",
+			                     gr::io_signature::make(1, 1, sizeof(gr_complex)),
+			                     gr::io_signature::make(0, 1, sizeof(float)),
+			                     frame_len),
+			d_M(M), // Constellation Order
+			d_frame_len(frame_len),
+			d_snr_db(0.0),
+			d_const(M),
+			d_disable(false)
+		{
+			set_alpha(alpha);
+		}
 
-    /*
-     * Our virtual destructor.
-     */
-    mer_measurement_impl::~mer_measurement_impl()
-    {
-    }
+		/*
+		 * Our virtual destructor.
+		 */
+		mer_measurement_impl::~mer_measurement_impl()
+		{
+		}
 
-    int
-    mer_measurement_impl::work(int noutput_items,
-        gr_vector_const_void_star &input_items,
-        gr_vector_void_star &output_items)
-    {
-      const gr_complex *in = (const gr_complex *) input_items[0];
-      float *out = (float *) output_items[0];
-      gr_complex Ik, sym_err_k;
-      float e_k;
-      float lin_mer;
+		int
+		mer_measurement_impl::work(int noutput_items,
+		                           gr_vector_const_void_star &input_items,
+		                           gr_vector_void_star &output_items)
+		{
+			const gr_complex *in = (const gr_complex *) input_items[0];
+			float *out = output_items.size() >= 1 ? (float *) output_items[0] : NULL;
+			gr_complex Ik, sym_err_k;
+			float e_k;
+			float lin_mer;
+			int n_frames = noutput_items;
 
-      // Perform ML decoding over the input iq data to generate alphabets
-      int i;
-      for(i = 0; i < noutput_items; i++)
-      {
-        // Slice the BPSK or QPSK symbol
-        d_const.slice(&in[i], &Ik);
+			// Perform ML decoding over the input iq data to generate alphabets
+			for (int i_frame = 0; i_frame < n_frames; i_frame++) {
+				/* Disable the main loop only when the output port is not
+				 * connected (on console-only flowgraphs) */
+				if (!(d_disable == true && out == NULL))
+				{
+					for(int i = (i_frame * d_frame_len); i < ((i_frame + 1) * d_frame_len); i++)
+					{
+						// Slice the BPSK or QPSK symbol
+						d_const.slice(&in[i], &Ik);
 
-        // Symbol error:
-        sym_err_k = Ik - in[i];
+						// Symbol error:
+						sym_err_k = Ik - in[i];
 
-        // mag Sq. of the error
-        e_k = (sym_err_k.real()*sym_err_k.real()) + (sym_err_k.imag()*sym_err_k.imag());
+						// mag Sq. of the error
+						e_k = (sym_err_k.real()*sym_err_k.real()) + (sym_err_k.imag()*sym_err_k.imag());
 
-        // average magnitude squared error
-        d_avg_err = d_beta*d_avg_err + d_alpha*e_k;
+						// average magnitude squared error
+						d_avg_err = d_beta*d_avg_err + d_alpha*e_k;
 
-        // Resulting linear MER
-        lin_mer = 1.0f / d_avg_err;
-        /* The numerator should be Es, i.e. the average magnitude squared of the
-         * ideal symbols, but it is assumed unitary. */
+						// Resulting linear MER
+						lin_mer = 1.0f / d_avg_err;
+						/* The numerator should be Es, i.e. the average magnitude squared of the
+						 * ideal symbols, but it is assumed unitary. */
 
-        // Output MER in dB
-        out[i] = 10.0*log10(lin_mer);
+						// MER in dB
+						d_snr_db = 10.0*log10(lin_mer);
 
-        // Save globally
-        d_snr_db = out[i];
+						// Debug Prints
+						// printf("Symbol In \t Real:\t %f\t Imag:\t %f\n", in[i].real(), in[i].imag());
+						// printf("Sliced \t Real:\t %f\t Imag:\t %f\n", Ik.real(), Ik.imag());
+						// printf("Error \t Real:\t %f\t Imag:\t %f\n", sym_err_k.real(), sym_err_k.imag());
+						// printf("Mag Sq. Error \t %f \n", e_k);
+						// printf("Avg Error \t %f \n", d_avg_err);
+						// printf("Linear MER \t %f \n", lin_mer);
+						// printf("dB MER \t %f \n", out[i]);
+					}
+				}
 
-        // Debug Prints
-        // printf("Symbol In \t Real:\t %f\t Imag:\t %f\n", in[i].real(), in[i].imag());
-        // printf("Sliced \t Real:\t %f\t Imag:\t %f\n", Ik.real(), Ik.imag());
-        // printf("Error \t Real:\t %f\t Imag:\t %f\n", sym_err_k.real(), sym_err_k.imag());
-        // printf("Mag Sq. Error \t %f \n", e_k);
-        // printf("Avg Error \t %f \n", d_avg_err);
-        // printf("Linear MER \t %f \n", lin_mer);
-        // printf("dB MER \t %f \n", out[i]);
-      }
+				// Output MER in dB
+				if (out != NULL)
+					out[i_frame] = d_snr_db;
+			}
 
-      // Tell runtime system how many output items we produced.
-      return noutput_items;
-    }
+			// Tell runtime system how many output items we produced.
+			return noutput_items;
+		}
 
-    /*
-     * Set the averaging alpha
-     */
-    void mer_measurement_impl::set_alpha(float alpha)
-    {
-      d_alpha   = alpha;
-      d_beta    = 1 - d_alpha;
-      d_avg_err = 0;
-    }
+		/*
+		 * Set the averaging alpha
+		 */
+		void mer_measurement_impl::set_alpha(float alpha)
+		{
+			d_alpha   = alpha;
+			d_beta    = 1 - d_alpha;
+			d_avg_err = 0;
+		}
 
-    /*
-     * Get SNR
-     */
-    float mer_measurement_impl::get_snr()
-    {
-      return d_snr_db;
-    }
+		/*
+		 * Get SNR
+		 */
+		float mer_measurement_impl::get_snr()
+		{
+			return d_snr_db;
+		}
 
-  } /* namespace blocksat */
+		/*
+		 * Enable block
+		 */
+		void mer_measurement_impl::enable()
+		{
+			d_disable = false;
+		}
+
+		/*
+		 * Disable block
+		 */
+		void mer_measurement_impl::disable()
+		{
+			d_disable = true;
+		}
+	} /* namespace blocksat */
 } /* namespace gr */

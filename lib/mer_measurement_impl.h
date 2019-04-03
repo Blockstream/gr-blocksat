@@ -25,34 +25,37 @@
 #include "constellation.h"
 
 namespace gr {
-  namespace blocksat {
+	namespace blocksat {
 
-    class mer_measurement_impl : public mer_measurement
-    {
-     private:
-       int d_N;
-       int d_M;
-       float d_alpha;
-       float d_beta;
-       float d_avg_err;
-       float d_snr_db;
-       Constellation d_const;
+		class mer_measurement_impl : public mer_measurement
+		{
+		private:
+			int d_M;
+			int d_frame_len;
+			float d_alpha;
+			float d_beta;
+			float d_avg_err;
+			float d_snr_db;
+			Constellation d_const;
+			bool d_disable;
 
-     public:
-      mer_measurement_impl(float alpha, int M);
-      ~mer_measurement_impl();
+		public:
+			mer_measurement_impl(float alpha, int M, int frame_len);
+			~mer_measurement_impl();
 
-      // Where all the action really happens
-      int work(int noutput_items,
-         gr_vector_const_void_star &input_items,
-         gr_vector_void_star &output_items);
+			// Where all the action really happens
+			int work(int noutput_items,
+			         gr_vector_const_void_star &input_items,
+			         gr_vector_void_star &output_items);
 
-      // Public getters/setters
-      float get_snr();
-      void set_alpha(float alpha);
-    };
+			// Public getters/setters
+			float get_snr();
+			void set_alpha(float alpha);
+			void enable(void);
+			void disable(void);
+		};
 
-  } // namespace blocksat
+	} // namespace blocksat
 } // namespace gr
 
 #endif /* INCLUDED_BLOCKSAT_MER_MEASUREMENT_IMPL_H */
