@@ -38,8 +38,8 @@ namespace gr {
 			int d_n_success_to_lock;
 			bool d_en_eq;
 			bool d_en_phase_corr;
-			bool d_verbose;
 			bool d_en_freq_corr;
+			int d_debug_level;
 			/* Other private variables */
 			gr::filter::kernel::fir_filter_with_buffer_ccc* d_pmf;
 			int           d_i_frame;
@@ -78,7 +78,7 @@ namespace gr {
 			frame_synchronizer_cc_impl(
 				const std::vector<gr_complex> &preamble_syms, int frame_len,
 				int M, int n_success_to_lock, bool en_eq,
-				bool en_phase_corr, bool verbose, bool en_freq_corr);
+				bool en_phase_corr, bool en_freq_corr, int debug_level);
 			~frame_synchronizer_cc_impl();
 
 			// Where all the action really happens

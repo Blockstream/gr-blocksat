@@ -55,13 +55,13 @@ namespace gr {
 		frame_synchronizer_cc::make(
 			const std::vector<gr_complex> &preamble_syms,
 			int frame_len, int M, int n_success_to_lock,
-			bool en_eq, bool en_phase_corr, bool verbose,
-			bool en_freq_corr)
+			bool en_eq, bool en_phase_corr, bool en_freq_corr,
+			int debug_level)
 		{
 			return gnuradio::get_initial_sptr
 				(new frame_synchronizer_cc_impl(
 					preamble_syms, frame_len, M, n_success_to_lock, en_eq,
-					en_phase_corr, verbose, en_freq_corr));
+					en_phase_corr, en_freq_corr, debug_level));
 		}
 
 		/*
@@ -70,7 +70,8 @@ namespace gr {
 		frame_synchronizer_cc_impl::frame_synchronizer_cc_impl(
 			const std::vector<gr_complex> &preamble_syms,
 			int frame_len, int M, int n_success_to_lock,
-			bool en_eq, bool en_phase_corr, bool verbose, bool en_freq_corr)
+			bool en_eq, bool en_phase_corr, bool en_freq_corr,
+			int debug_level)
 			: gr::block("frame_synchronizer_cc",
 			            gr::io_signature::make(1, 1, sizeof(gr_complex)),
 			            gr::io_signature::make2(1, 2, sizeof(gr_complex),
@@ -80,7 +81,7 @@ namespace gr {
 			d_n_success_to_lock(n_success_to_lock),
 			d_en_eq(en_eq),
 			d_en_phase_corr(en_phase_corr),
-			d_verbose(verbose),
+			d_debug_level(debug_level),
 			d_en_freq_corr(en_freq_corr),
 			d_i_frame(0),
 			d_i_frame_start(0),
@@ -336,7 +337,7 @@ namespace gr {
 
 					info_printf("success count = %d\n", d_success_cnt);
 
-					if (d_verbose) {
+					if (d_debug_level > 0) {
 						printf("%-21s Matched peaks = %d / %d\t",
 						       "[Frame Synchronizer ]", d_success_cnt,
 						       d_n_success_to_lock);
@@ -413,7 +414,7 @@ namespace gr {
 							d_start_idx_cfo += d_frame_len;
 
 						/* Debug */
-						if (d_verbose) {
+						if (d_debug_level > 1) {
 							printf("%-21s Got CFO tag at offset: %d\t",
 							       "[Frame Synchronizer ]", tag_offset);
 							printf("Expected: %d (error %d)\tSend new start: %d\n",
@@ -445,7 +446,7 @@ namespace gr {
 						             pmt::from_float(d_avg_freq_offset));
 
 						/* Debug */
-						if (d_verbose) {
+						if (d_debug_level > 2) {
 							printf("%-21s Fine freq. offset: % 8.6f\tAvg: % 8.6f\n",
 							       "[Frame Synchronizer ]", freq_offset,
 							       d_avg_freq_offset);
@@ -496,7 +497,7 @@ namespace gr {
 						d_fail_cnt++;
 						info_printf("failure count = %d\n", d_fail_cnt);
 
-						if (d_verbose) {
+						if (d_debug_level > 0) {
 							printf("%-21s Unmatched peaks = %d / %d\t",
 							       "[Frame Synchronizer ]", d_fail_cnt,
 							       d_n_success_to_lock);
