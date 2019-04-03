@@ -23,33 +23,36 @@
 #define INCLUDED_BLOCKSAT_MER_MEASUREMENT_H
 
 #include <blocksat/api.h>
-#include <gnuradio/sync_block.h>
+#include <gnuradio/sync_decimator.h>
 
 namespace gr {
-  namespace blocksat {
+	namespace blocksat {
 
-    /*!
-     * \brief <+description of block+>
-     * \ingroup blocksat
-     *
-     */
-    class BLOCKSAT_API mer_measurement : virtual public gr::sync_block
-    {
-     public:
-      typedef boost::shared_ptr<mer_measurement> sptr;
+		/*!
+		 * \brief <+description of block+>
+		 * \ingroup blocksat
+		 *
+		 */
+		class BLOCKSAT_API mer_measurement : virtual public gr::sync_decimator
+		{
+		public:
+			typedef boost::shared_ptr<mer_measurement> sptr;
 
-      /*!
-       * \brief Make the modulation error ratio (MER) measurement instance
-       * \param alpha IIR-based averaging alpha
-       * \param M constellation order
-       */
-      static sptr make(float alpha, int M);
+			/*!
+			 * \brief Make the modulation error ratio (MER) measurement instance
+			 * \param alpha IIR-based averaging alpha
+			 * \param M constellation order
+			 * \param frame_len Frame length
+			 */
+			static sptr make(float alpha, int M, int frame_len);
 
-      virtual float get_snr() = 0;
-      virtual void set_alpha(float alpha) = 0;
-    };
+			virtual float get_snr() = 0;
+			virtual void set_alpha(float alpha) = 0;
+			virtual void disable(void) = 0;
+			virtual void enable(void) = 0;
+		};
 
-  } // namespace blocksat
+	} // namespace blocksat
 } // namespace gr
 
 #endif /* INCLUDED_BLOCKSAT_MER_MEASUREMENT_H */

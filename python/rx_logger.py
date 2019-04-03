@@ -119,9 +119,18 @@ def print_snr(block_obj, label_setter):
     # Check frame sync state first
     state = block_obj["fs"].get_state()
 
+    # Disable the MER measurement block when frame sync is locked. Re-enable
+    # after unlocking.
+    if (bool(state) and (block_obj["fs_locked"] == False)):
+        block_obj["mer_meter"].disable()
+        block_obj["fs_locked"] = True
+    elif ((not bool(state)) and (block_obj["fs_locked"] == True)):
+        block_obj["mer_meter"].enable()
+        block_obj["fs_locked"] = False
+
     # If locked, get data-aided SNR measurement from phase recovery block. If
     # unlocked, get from the SNR meter block
-    if (state):
+    if (block_obj["fs_locked"]):
         snr_db = block_obj["phase_rec"].get_snr()
     else:
         snr_db = block_obj["mer_meter"].get_snr()
@@ -221,7 +230,8 @@ class rx_logger():
             snr_objects = {
                 "mer_meter" : snr_meter_obj,
                 "phase_rec" : phase_rec_obj,
-                "fs"        : frame_synchronizer_obj
+                "fs"        : frame_synchronizer_obj,
+                "fs_locked" : False
             }
             self.snr_logger = Logger(snr_objects,
                                      snr_log_period,
