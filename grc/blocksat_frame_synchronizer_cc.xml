@@ -11,8 +11,8 @@
   $n_success_to_lock,
   $en_eq,
   $en_phase_corr,
-  $verbose,
-  $en_freq_corr)</make>
+  $en_freq_corr,
+  $debug_level)</make>
   <callback>get_mag_pmf_peak()</callback>
   <callback>get_state()</callback>
   <param>
@@ -85,9 +85,9 @@
     </option>
   </param>
   <param>
-    <name>Verbose</name>
-    <key>verbose</key>
-    <type>bool</type>
+    <name>Debug Level</name>
+    <key>debug_level</key>
+    <type>int</type>
   </param>
   <sink>
     <name>in</name>

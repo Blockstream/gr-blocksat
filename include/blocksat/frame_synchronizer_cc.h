@@ -45,13 +45,13 @@ namespace gr {
 			 * \param n_success_to_lock How many consecutive peaks until lock
 			 * \param en_eq Enable gain scaling
 			 * \param en_phase_corr Enable phase correction per frame
-			 * \param verbose Activate verbose mode
 			 * \param en_freq_corr Enable fine frequency correction
+			 * \param debug_level Toggle debug prints - choose from level 0 to 3
 			 */
 			static sptr make(const std::vector<gr_complex> &preamble_syms,
 			                 int frame_len, int M, int n_success_to_lock,
-			                 bool en_eq, bool en_phase_corr, bool verbose,
-			                 bool en_freq_corr);
+			                 bool en_eq, bool en_phase_corr, bool en_freq_corr,
+			                 int debug_level);
 
 			/*!
 			 * \brief Get magnitude of PMF peak

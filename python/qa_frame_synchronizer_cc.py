@@ -45,7 +45,8 @@ class qa_frame_synchronizer_cc (gr_unittest.TestCase):
         n_success_to_lock = 1
         en_eq             = False
         en_phase_corr     = False
-        verbose           = True
+        en_freq_corr      = False
+        debug_level       = 3
         n_frames          = 5
 
         silence_syms = (0.0001 + 0.0000j, 0.0001 + 0.0000j, 0.0001 + 0.0000j,
@@ -68,11 +69,16 @@ class qa_frame_synchronizer_cc (gr_unittest.TestCase):
         expected_res  = tuple(repmat(rx_frame, 1, n_frames - n_success_to_lock)[0])
 
         # Flowgraph
-        sym_src = blocks.vector_source_c(rx_syms)
-        frame_synchronizer = blocksat.frame_synchronizer_cc(
-            self.barker_code, frame_len, M, threshold, n_success_to_lock, en_eq,
-            en_phase_corr, verbose)
-        sym_snk  = blocks.vector_sink_c ()
+        sym_src            = blocks.vector_source_c(rx_syms)
+        frame_synchronizer = blocksat.frame_synchronizer_cc(self.barker_code,
+                                                            frame_len,
+                                                            M,
+                                                            n_success_to_lock,
+                                                            en_eq,
+                                                            en_phase_corr,
+                                                            en_freq_corr,
+                                                            debug_level)
+        sym_snk            = blocks.vector_sink_c ()
         self.tb.connect(sym_src, (frame_synchronizer, 0))
         self.tb.connect((frame_synchronizer, 0), sym_snk)
         self.tb.run()
