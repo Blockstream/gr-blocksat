@@ -156,24 +156,26 @@ def print_snr(block_obj, label_setter):
 
 def print_ber(block_obj, label_setter):
 
-    # Get BER
-    ber = block_obj.get_ber()
+    # Get frame error rate (FER)
+    fer      = block_obj.get_fer()
+    n_frames = block_obj.get_n_frames()
+    n_err    = round(fer * float(n_frames))
 
     # Print
     sys.stdout.write("----------------------------------------")
     sys.stdout.write("----------------------------------------\n")
     sys.stdout.write("[" + time.strftime("%Y-%m-%d %H:%M:%S") + "] ")
-    sys.stdout.write("Bit Error Rate: ")
-    ber_str = str("{:.2E}".format(ber))
-    sys.stdout.write(ber_str)
+    sys.stdout.write("Frame Error Rate: ")
+    fer_str = str("{:.2E}".format(fer))
+    sys.stdout.write(fer_str + " %3d dropped / %5d frames" %(n_err, n_frames))
     sys.stdout.write("\r\n")
     sys.stdout.write("----------------------------------------")
     sys.stdout.write("----------------------------------------\n")
     sys.stdout.flush()
 
-    # Set the formatted ber in the label as well
+    # Set the formatted FER in the label as well
     if (label_setter is not None):
-        label_setter(ber_str)
+        label_setter(fer_str)
 
 
 def print_cfo(block_obj, label_setter):
