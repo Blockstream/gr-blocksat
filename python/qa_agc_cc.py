@@ -43,7 +43,7 @@ class qa_agc_cc (gr_unittest.TestCase):
         """AGC on random noisy QPSK symbols"""
 
         # Parameters
-        snr_db     = 0.0
+        snr_db     = 2.0
         const_mult = 1.5
         agc_rate   = 1e-4
         agc_ref    = 1.0
