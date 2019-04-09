@@ -22,6 +22,7 @@
 from gnuradio import gr, gr_unittest
 from gnuradio import blocks
 import blocksat_swig as blocksat
+import numpy as np
 from numpy.matlib import repmat
 
 class qa_frame_synchronizer_cc (gr_unittest.TestCase):
@@ -47,10 +48,9 @@ class qa_frame_synchronizer_cc (gr_unittest.TestCase):
         en_phase_corr     = False
         en_freq_corr      = False
         debug_level       = 3
-        n_frames          = 5
+        n_frames          = 10
+        n_silence         = 5
 
-        silence_syms = (0.0001 + 0.0000j, 0.0001 + 0.0000j, 0.0001 + 0.0000j,
-                        0.0001 + 0.0000j, 0.0001 + 0.0000j)
         rx_preamble  = (-0.9511 - 0.3090j, -0.9298 - 0.3681j, -0.9048 - 0.4258j,
                         -0.8763 - 0.4818j, -0.8443 - 0.5358j, 0.8090 + 0.5878j,
                         0.7705 + 0.6374j, -0.7290 - 0.6845j, -0.6845 - 0.7290j,
@@ -64,29 +64,36 @@ class qa_frame_synchronizer_cc (gr_unittest.TestCase):
                         -0.4818 + 0.8763j, 0.5358 - 0.8443j, -0.5878 + 0.8090j,
                         0.6374 - 0.7705j, -0.6845 + 0.7290j)
         rx_frame      = rx_preamble + rx_payload
-        rx_syms       = silence_syms + tuple(repmat(rx_frame, 1, n_frames)[0])
         # Expected result should exclude the number of frames to lock
         expected_res  = tuple(repmat(rx_frame, 1, n_frames - n_success_to_lock)[0])
 
-        # Flowgraph
-        sym_src            = blocks.vector_source_c(rx_syms)
-        frame_synchronizer = blocksat.frame_synchronizer_cc(self.barker_code,
-                                                            frame_len,
-                                                            M,
-                                                            n_success_to_lock,
-                                                            en_eq,
-                                                            en_phase_corr,
-                                                            en_freq_corr,
-                                                            debug_level)
-        sym_snk            = blocks.vector_sink_c ()
-        self.tb.connect(sym_src, (frame_synchronizer, 0))
-        self.tb.connect((frame_synchronizer, 0), sym_snk)
-        self.tb.run()
-        res_sym_out  = sym_snk.data()
+        # By using the number of silence symbols, try all possible frame start
+        # indexes:
+        for n_silence in range(0, frame_len):
+            print("Try n_silence = %d" %(n_silence))
+            silence_syms = 0.0001 * np.ones(n_silence, np.complex64)
+            rx_syms      = np.concatenate((silence_syms, tuple(repmat(rx_frame, 1, n_frames)[0])))
 
-        # Results
-        self.assertFloatTuplesAlmostEqual (expected_res[1:frame_len],
-                                           res_sym_out[1:frame_len], 6)
+
+            # Flowgraph
+            sym_src            = blocks.vector_source_c(rx_syms)
+            frame_synchronizer = blocksat.frame_synchronizer_cc(self.barker_code,
+                                                                frame_len,
+                                                                M,
+                                                                n_success_to_lock,
+                                                                en_eq,
+                                                                en_phase_corr,
+                                                                en_freq_corr,
+                                                                debug_level)
+            sym_snk            = blocks.vector_sink_c ()
+            self.tb.connect(sym_src, (frame_synchronizer, 0))
+            self.tb.connect((frame_synchronizer, 0), sym_snk)
+            self.tb.run()
+            res_sym_out  = sym_snk.data()
+
+            # Results
+            self.assertFloatTuplesAlmostEqual (expected_res[1:frame_len],
+                                               res_sym_out[1:frame_len], 6)
 
 
 if __name__ == '__main__':
