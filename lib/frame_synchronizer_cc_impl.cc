@@ -312,12 +312,19 @@ namespace gr {
 					/* PMF peak */
 					volk_32f_index_max_32u(d_i_max, d_mag_pmf_buffer, d_frame_len);
 
-					/* From the PMF peak, derive: */
-					i_frame_start  = (*d_i_max - d_peak_delay) % d_frame_len;
+					/* Frame start index indicated by the current PMF peak */
+					i_frame_start  = (((int) (*d_i_max)) - d_peak_delay) % d_frame_len;
+					/* The above is a remainder operation. We want a modulo
+					 * operation, which is accomplished by: */
+					if (i_frame_start < 0)
+						i_frame_start += d_frame_len;
+
+					info_printf("index of max value = %u\n",  *d_i_max);
+					info_printf("index of frame start = %d\n", i_frame_start);
+
+					/* Complex PMF peak and magnitude of the PMF peak */
 					pmf_peak       = d_pmf_out_buffer[*d_i_max];
 					d_mag_pmf_peak = abs(pmf_peak);
-					info_printf("index of max value = %u\n",  *d_i_max);
-					info_printf("index of frame start = %u\n", i_frame_start);
 
 					/* For locking, success is to have a peak in the same index
 					 * between consecutive frames. Reset the success count to
