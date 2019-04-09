@@ -71,6 +71,7 @@ namespace gr {
 			float         d_alpha;
 			float         d_beta;
 			float         d_avg_freq_offset;
+			bool          d_first_iter;
 
 			float est_freq_offset(const gr_complex *in);
 

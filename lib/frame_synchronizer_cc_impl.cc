@@ -93,7 +93,8 @@ namespace gr {
 			d_eq_gain(1.0),
 			d_alpha(0.1),
 			d_beta(1.0 - 0.1),
-			d_avg_freq_offset(0.0)
+			d_avg_freq_offset(0.0),
+			d_first_iter(true)
 		{
 			/* Constants
 			 *
@@ -329,7 +330,9 @@ namespace gr {
 					/* For locking, success is to have a peak in the same index
 					 * between consecutive frames. Reset the success count to
 					 * zero when not successful */
-					if (i_frame_start == d_last_i_frame_start) {
+					if (d_first_iter)
+						d_first_iter = false;
+					else if (i_frame_start == d_last_i_frame_start) {
 						d_success_cnt++;
 					} else
 						d_success_cnt = 0;
@@ -348,6 +351,26 @@ namespace gr {
 
 					/* Just acquired frame timing lock */
 					if (d_success_cnt == d_n_success_to_lock) {
+						/* If we lock to an index that lies within a range of
+						 * "preamble_len" indexes by the end of the frame
+						 * buffer, the math becomes complicated. This is because
+						 * in this case the preamble is partially on the current
+						 * buffer, and partially on the subsequent
+						 * buffer. Consequently, we would have to compute
+						 * cross-correlations in two steps and save state in
+						 * between.
+						 *
+						 * As a workaround, instead of proceeding in this case,
+						 * just return and try again. Before returning, change
+						 * the number of consumed samples such that, next time,
+						 * the preamble lies in the beginning of the buffer.
+						 */
+						if (i_frame_start >= (d_frame_len - d_preamble_len)) {
+							n_consumed -= d_preamble_len;
+							consume_each(n_consumed);
+							return 0;
+						}
+
 						d_locked        = true;
 						d_i_frame_start = i_frame_start;
 						/* NOTE: variable "d_i_frame_start" holds the acquired
@@ -459,6 +482,13 @@ namespace gr {
 					 *
 					 * NOTE 2: this correction also helps with the estimation of
 					 * the PMF peak phase that is reported dowstream.
+					 *
+					 * NOTE 3: it is assumed here that, from index "in +
+					 * i_offset + d_i_frame_start", the entire preamble can be
+					 * found still within the current input buffer. This is
+					 * guaranteed by the fact that this block does not lock if
+					 * start index is greater than or equal to "(d_frame_len -
+					 * d_preamble_len)". See the note within the locking logic.
 					 */
 					phasor   = gr_expj(-2 * M_PI * d_avg_freq_offset);
 					phasor_0 = gr_expj(0.0);
@@ -513,8 +543,9 @@ namespace gr {
 						print_system_timestamp();
 						printf("##########################################\n\n");
 
-						/* To preserve alignment on the output, output the last
-						 * frame entirely before unlocking */
+						/* To preserve alignment on the output, output the
+						 * remaining part of the current frame before
+						 * unlocking. */
 						memcpy(out + n_produced, in + i_offset,
 						       d_i_frame_start * sizeof(gr_complex));
 						n_produced += d_i_frame_start;
