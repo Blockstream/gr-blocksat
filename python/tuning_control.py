@@ -375,9 +375,8 @@ class tuning_control(threading.Thread):
   def set_freq(self, freq):
     """Wrapper for setting the frequency in HW as int """
 
-    self.cfo_rec_obj.reset()
-
     self.set_hw_freq(int(round(freq)))
+    self.cfo_rec_obj.reset()
 
   def get_cfo_estimation(self):
     """Get the CFO corresponding to the current freq. correction """
