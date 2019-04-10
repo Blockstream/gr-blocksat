@@ -84,7 +84,8 @@ namespace gr {
 			d_n_equal_corr(0),
 			d_start_index(0),
 			d_i_sample(0),
-			d_pend_corr_update(false)
+			d_pend_corr_update(false),
+			d_frame_locked(false)
 		{
 			set_output_multiple(fft_len);
 			d_fft = new fft::fft_complex(fft_len, true);
@@ -122,7 +123,8 @@ namespace gr {
 		ffw_coarse_freq_req_cc_impl::handle_set_start_index(pmt::pmt_t msg)
 		{
 			if (pmt::is_integer(msg)) {
-				d_start_index = pmt::to_long(msg) * d_sps;
+				d_start_index  = pmt::to_long(msg) * d_sps;
+				d_frame_locked = true; /* infer frame lock */
 				if (d_debug)
 					printf("%-21s Set frame start index to: %d\n",
 					       "[Frequency Recovery ]", d_start_index);
@@ -167,7 +169,7 @@ namespace gr {
 				out_block = out + i_offset;
 
 				/* Handle sleeping */
-				if (d_i_block != 0)
+				if (d_i_block != 0 && d_frame_locked)
 					goto output;
 
 				/* Raise to the power of 2 (BPSK) or 4 (QPSK) */
@@ -402,6 +404,13 @@ namespace gr {
 			d_f_e          = 0.0;
 			d_phase_inc    = 0.0;
 			d_phase_accum  = 0.0;
+			d_i_block      = 0; /* wake up from sleep interval */
+			d_frame_locked = false;
+			d_start_index  = 0;
+			memset(d_avg_buffer, 0, d_fft_len * sizeof(float));
+
+			if (d_debug)
+				printf("%-21s Resetting state\n", "[Frequency Recovery ]");
 		}
 
 	} /* namespace blocksat */

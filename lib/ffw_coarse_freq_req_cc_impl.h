@@ -56,6 +56,7 @@ namespace gr {
 			int               d_start_index;
 			int               d_i_sample;
 			bool              d_pend_corr_update;
+			bool              d_frame_locked;
 
 			void update_nco_phase(int n_samples);
 
