@@ -361,8 +361,8 @@ namespace gr {
 						d_const.slice(&x_derotated, &x_sliced);
 
 						/* Decision-directed ML phase error detector: */
-						phi_error = (x_derotated.imag() * x_sliced.real()) -
-							(x_derotated.real() * x_sliced.imag());
+						conj_prod_err = x_derotated * conj(x_sliced);
+						phi_error = gr::fast_atan2f(conj_prod_err);
 
 						/*
 						 * Force error to zero if data-aided only
