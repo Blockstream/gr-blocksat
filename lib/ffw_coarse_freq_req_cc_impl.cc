@@ -69,20 +69,22 @@ namespace gr {
 			d_M(M),
 			d_sleep_per(sleep_per),
 			d_debug(debug),
-			d_half_fft_len(fft_len / 2),
+			d_frame_len(frame_len),
+			d_sps(sps),
+			d_frame_len_oversamp(frame_len * sps),
 			d_beta(1 - alpha),
+			d_half_fft_len(fft_len / 2),
 			d_delta_f(1.0 / (float(M) * fft_len)),
 			d_f_e(0.0),
 			d_phase_inc(0.0),
 			d_phase_accum(0.0),
+			d_nco_phasor(0.0),
 			d_i_block(0),
 			d_n_equal_corr(0),
-			d_frame_len(frame_len),
-			d_sps(sps),
-			d_frame_len_oversamp(frame_len * sps),
 			d_start_index(0),
 			d_i_sample(0),
-			d_pend_corr_update(false)
+			d_pend_corr_update(false),
+			d_pend_f_e(0.0)
 		{
 			set_output_multiple(fft_len);
 			d_fft = new fft::fft_complex(fft_len, true);

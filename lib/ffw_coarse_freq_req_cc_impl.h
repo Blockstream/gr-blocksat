@@ -48,8 +48,8 @@ namespace gr {
 			float             d_delta_f;
 			float             d_f_e;
 			float             d_phase_inc;
-			gr_complex        d_nco_phasor;
 			float             d_phase_accum;
+			gr_complex        d_nco_phasor;
 			unsigned int      d_i_block;
 			unsigned int      d_n_equal_corr;
 			int               d_start_index;
