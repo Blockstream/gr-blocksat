@@ -41,10 +41,10 @@ namespace gr {
 			float             d_beta;
 			int               d_half_fft_len;
 			fft::fft_complex *d_fft;
-			int               d_align;
 			gr_complex       *d_fft_buffer;
 			float            *d_mag_buffer;
 			float            *d_avg_buffer;
+			uint32_t         *d_i_max_buffer;
 			float             d_delta_f;
 			float             d_f_e;
 			float             d_phase_inc;
@@ -55,7 +55,6 @@ namespace gr {
 			int               d_start_index;
 			int               d_i_sample;
 			bool              d_pend_corr_update;
-			float             d_pend_f_e;
 
 			void update_phase(float *phase, float phase_inc, int n_samples);
 

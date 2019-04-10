@@ -83,16 +83,20 @@ namespace gr {
 			d_n_equal_corr(0),
 			d_start_index(0),
 			d_i_sample(0),
-			d_pend_corr_update(false),
-			d_pend_f_e(0.0)
+			d_pend_corr_update(false)
 		{
 			set_output_multiple(fft_len);
 			d_fft = new fft::fft_complex(fft_len, true);
 
-			d_align      = volk_get_alignment();
-			d_fft_buffer = (gr_complex*) volk_malloc(fft_len * sizeof(gr_complex), d_align);
-			d_mag_buffer = (float*) volk_malloc(fft_len * sizeof(float), d_align);
-			d_avg_buffer = (float*) volk_malloc(fft_len * sizeof(float), d_align);
+			d_fft_buffer = (gr_complex*) volk_malloc(fft_len * sizeof(gr_complex),
+			                                         volk_get_alignment());
+			d_mag_buffer = (float*) volk_malloc(fft_len * sizeof(float),
+			                                    volk_get_alignment());
+			d_avg_buffer = (float*) volk_malloc(fft_len * sizeof(float),
+			                                    volk_get_alignment());
+			memset(d_avg_buffer, 0, fft_len * sizeof(float));
+			d_i_max_buffer = (uint32_t*) volk_malloc(sizeof(uint32_t),
+			                                         volk_get_alignment());
 
 			message_port_register_in(pmt::mp("start_index"));
 			set_msg_handler(
@@ -109,6 +113,7 @@ namespace gr {
 			volk_free(d_fft_buffer);
 			volk_free(d_mag_buffer);
 			volk_free(d_avg_buffer);
+			volk_free(d_i_max_buffer);
 			delete d_fft;
 		}
 
@@ -149,16 +154,17 @@ namespace gr {
 			gr_complex nco_conj;
 			int i_offset;
 			const gr_complex *in_block;
+			gr_complex *out_block;
 			float f_e;
-			gr_complex *fft_inbuf;
 			int start_in_range, i_update;
 			int i_sample_next;
 			gr_complex nco_phasor_0;
 
-			// Process each FFT block at once
+			// Process one FFT block at a time
 			for (int i_block = 0; i_block < n_blocks; i_block++) {
-				i_offset    = d_fft_len * i_block;
-				in_block    = in + i_offset;
+				i_offset  = d_fft_len * i_block;
+				in_block  = in + i_offset;
+				out_block = out + i_offset;
 
 				/* Handle sleeping */
 				if (d_i_block != 0)
@@ -175,9 +181,8 @@ namespace gr {
 				}
 
 				/* FFT */
-				fft_inbuf = d_fft->get_inbuf();
-				for (int i = 0; i < d_fft_len; i++)
-					fft_inbuf[i] = d_fft_buffer[i];
+				memcpy(d_fft->get_inbuf(), d_fft_buffer,
+				       sizeof(gr_complex)*d_fft_len);
 				d_fft->execute();
 
 				/* Magnitude and average magnitude */
@@ -191,7 +196,8 @@ namespace gr {
 				                    d_fft_len);
 
 				/* Peak detection */
-				volk_32f_index_max_32u(&i_max, d_avg_buffer, d_fft_len);
+				volk_32f_index_max_32u(d_i_max_buffer, d_avg_buffer, d_fft_len);
+				i_max = *d_i_max_buffer;
 				debug_printf("Peak: %d\n", i_max);
 
 				/* Shift FFT peak index */
@@ -199,7 +205,7 @@ namespace gr {
 				debug_printf("Shifted index: %d\n", i_max_shifted);
 
 				/* Normalized frequency offset */
-				f_e         = i_max_shifted * d_delta_f;
+				f_e = i_max_shifted * d_delta_f;
 
 				/* Debug prints */
 				if (d_debug)
@@ -216,9 +222,13 @@ namespace gr {
 				}
 
 				/* If the estimated CFO is different than before, mark the
-				 * correction update as pending */
+				 * correction update as pending.
+				 *
+				 * This pending freq. offset value may or may not be applied
+				 * next, depending on whether the start of frame lies within the
+				 * range of the current FFT block.
+				*/
 				d_pend_corr_update = (f_e != d_f_e);
-				d_pend_f_e         = f_e;
 
 			output:
 
@@ -226,32 +236,83 @@ namespace gr {
 				 *
 				 * Try to change the correction value only on an index that
 				 * matches with respect to the frame start index, reported via
-				 * message port.
+				 * message port. This is essential for performance. By applying
+				 * a new correction within the preamble, the remaining blocks
+				 * have the entire preamble to lock again.
+				 *
+				 * To do so, keep track of the notion of frame boundaries by
+				 * using a sample counter modulo the oversampled frame
+				 * length.
+				 *
+				 * The frame synchronizer processes blocks of symbols with size
+				 * corresponding to the frame length. The actual frame start can
+				 * be anywhere within this block. This start index is reported
+				 * to us in this block.
+				 *
+				 * The reported index (of a symbol) is first mapped to a
+				 * corresponding sample, by considering the oversampling
+				 * ratio. By keeping a sample counter modulo the oversampled
+				 * frame length, we can detect when processing the specific
+				 * frame start sample index.
+				 *
+				 * There are three possibilities for passing through the sample
+				 * start index:
+				 *
+				 *   1) FFT window entirely within a single frame:
+				 *
+				 *      In this case we know the frame start lies in the current
+				 *      FFT window by checking that the sample index (modulo
+				 *      oversampled frame length) of the next window is ahead of
+				 *      the sample start index and that the start of the current
+				 *      FFT window is behind (or equal to) the frame start
+				 *      index.
+				 *
+				 *   2) FFT window placed between the end of a frame and start
+				 *      of another:
+				 *
+				 *      In this case, the frame start lies in the current FFT
+				 *      window when either its index is within the end of the
+				 *      current frame that is covered by the FFT window or
+				 *      within the starting samples of the subsequent frame that
+				 *      is also covered by the FFT window.
+				 *
+				 *      NOTE: we know the FFT window covers the junction between
+				 *      two frames by checking whether the next sample index
+				 *      (modulo oversampled frame length) is less than the
+				 *      current, i.e. sample counter will wrap around.
+				 *
+				 *   3) FFT window matched to the oversampled frame length
+				 *
+				 *      In case the next sample index is equal to the current,
+				 *      it means that the FFT length is matched to the frame
+				 *      length, such that the frame start will always be in the
+				 *      current FFT block range. For completeness, we consider
+				 *      that the FFT length could still span the end of a frame
+				 *      and the start of another in this case. This is covered
+				 *      by equality in the condition "i_sample_next <=
+				 *      d_i_sample" used below.
+				 *
+				 * In the logic that follows, we mark whether the frame start
+				 * index is in the range of the block of samples being processed
+				 * in variable "start_in_range" and put the sample index within
+				 * the block of Nfft samples corresponding to the frame start in
+				 * variable "i_update".
+				 *
 				 */
 				i_sample_next = (d_i_sample + d_fft_len) % d_frame_len_oversamp;
 
-				/* Check whether the frame start index is in the range of the
-				 * block of samples being processed (within variable
-				 * "start_in_range") and compute the index within the block of
-				 * Nfft samples corresponding to the frame start index (variable
-				 * "i_update").
-				 *
-				 * While doing so, check whether the current FFT window is
-				 * placed on the end of a frame and start of another. This is
-				 * detected by checking whether the next sample index (mod frame
-				 * length) is less than the current (meaning the counter has
-				 * wrapped). Equality in this case covers the case when the
-				 * oversampled frame length is exactly the same as the FFT
-				 * length.
-				 */
+				/* FFT window overlapping two frames */
 				if (i_sample_next <= d_i_sample) {
 					start_in_range = (d_start_index >= d_i_sample) ||
 						(d_start_index < i_sample_next);
-					if (d_start_index < d_i_sample)
+					/* frame start on the "subsequent frame" */
+					if (d_start_index < d_i_sample) {
 						i_update = (d_frame_len_oversamp - d_i_sample) +
 							d_start_index;
-					else
+					/* frame start on the "current frame" */
+					} else
 						i_update = d_start_index - d_i_sample;
+				/* FFT window within a single frame */
 				} else {
 					start_in_range = (d_start_index >= d_i_sample) &&
 						(d_start_index < i_sample_next);
@@ -267,15 +328,15 @@ namespace gr {
 				if (d_pend_corr_update && start_in_range) {
 					/* Apply the current correction until the update index */
 					nco_phasor_0 = gr_expj(d_phase_accum);
-					volk_32fc_s32fc_x2_rotator_32fc(out + i_offset,
-					                                in + i_offset,
+					volk_32fc_s32fc_x2_rotator_32fc(out_block,
+					                                in_block,
 					                                d_nco_phasor,
 					                                &nco_phasor_0,
 					                                i_update);
 					update_phase(&d_phase_accum, d_phase_inc, i_update);
 
 					/* Effectively update the freq. correction value */
-					d_f_e              = d_pend_f_e;
+					d_f_e              = f_e;
 					d_phase_inc        = M_TWOPI * d_f_e;
 					d_nco_phasor       = gr_expj(-d_phase_inc);
 					d_pend_corr_update = false;
@@ -292,8 +353,8 @@ namespace gr {
 
 					/* Apply update correction on remaining samples */
 					nco_phasor_0 = gr_expj(d_phase_accum);
-					volk_32fc_s32fc_x2_rotator_32fc(out + i_offset + i_update,
-					                                in + i_offset + i_update,
+					volk_32fc_s32fc_x2_rotator_32fc(out_block + i_update,
+					                                in_block + i_update,
 					                                d_nco_phasor,
 					                                &nco_phasor_0,
 					                                (d_fft_len - i_update));
@@ -302,8 +363,8 @@ namespace gr {
 				} else {
 					/* Correct entire FFT block at once */
 					nco_phasor_0 = gr_expj(d_phase_accum);
-					volk_32fc_s32fc_x2_rotator_32fc(out + i_offset,
-					                                in + i_offset,
+					volk_32fc_s32fc_x2_rotator_32fc(out_block,
+					                                in_block,
 					                                d_nco_phasor,
 					                                &nco_phasor_0,
 					                                d_fft_len);
