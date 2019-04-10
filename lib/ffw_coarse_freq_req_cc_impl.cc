@@ -76,6 +76,7 @@ namespace gr {
 			d_half_fft_len(fft_len / 2),
 			d_delta_f(1.0 / (float(M) * fft_len)),
 			d_f_e(0.0),
+			d_pend_f_e(0.0),
 			d_phase_inc(0.0),
 			d_phase_accum(0.0),
 			d_nco_phasor(0.0),
@@ -225,9 +226,13 @@ namespace gr {
 				 *
 				 * This pending freq. offset value may or may not be applied
 				 * next, depending on whether the start of frame lies within the
-				 * range of the current FFT block.
+				 * range of the current FFT block. Furthermore, in sleep mode,
+				 * not always the frequency offset is estimated. Hence, the
+				 * pending frequency offset estimation should be saved next and
+				 * applied when time comes.
 				*/
 				d_pend_corr_update = (f_e != d_f_e);
+				d_pend_f_e         = f_e;
 
 			output:
 
@@ -335,7 +340,7 @@ namespace gr {
 					update_nco_phase(i_update);
 
 					/* Effectively update the freq. correction value */
-					d_f_e              = f_e;
+					d_f_e              = d_pend_f_e;
 					d_phase_inc        = M_TWOPI * d_f_e;
 					d_nco_phasor       = gr_expj(-d_phase_inc);
 					d_pend_corr_update = false;

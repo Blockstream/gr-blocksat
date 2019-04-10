@@ -47,6 +47,7 @@ namespace gr {
 			uint32_t         *d_i_max_buffer;
 			float             d_delta_f;
 			float             d_f_e;
+			float             d_pend_f_e;
 			float             d_phase_inc;
 			float             d_phase_accum;
 			gr_complex        d_nco_phasor;
