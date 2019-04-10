@@ -402,6 +402,7 @@ namespace gr {
 			d_f_e          = 0.0;
 			d_phase_inc    = 0.0;
 			d_phase_accum  = 0.0;
+			d_i_block      = 0; /* wake up from sleep interval */
 		}
 
 	} /* namespace blocksat */
