@@ -161,6 +161,7 @@ namespace gr {
 			volk_free(d_pmf_out_buffer);
 			volk_free(d_mag_pmf_buffer);
 			volk_free(d_i_max);
+			volk_free(d_pmf_tap_buffer);
 			volk_free(d_preamble_mod_rm);
 			volk_free(d_preamble_corr);
 			volk_free(d_angle);
