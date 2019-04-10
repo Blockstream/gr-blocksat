@@ -129,15 +129,14 @@ namespace gr {
 		}
 
 		void
-		ffw_coarse_freq_req_cc_impl::update_phase(float *phase, float phase_inc,
-		                                          int n_samples)
+		ffw_coarse_freq_req_cc_impl::update_nco_phase(int n_samples)
 		{
-			*phase -= n_samples * phase_inc;
+			d_phase_accum -= n_samples * d_phase_inc;
 
-			while (*phase < -M_PI)
-				*phase += M_TWOPI;
-			while (*phase > M_PI)
-				*phase -= M_TWOPI;
+			while (d_phase_accum < -M_PI)
+				d_phase_accum += M_TWOPI;
+			while (d_phase_accum > M_PI)
+				d_phase_accum -= M_TWOPI;
 		}
 
 		int
@@ -333,7 +332,7 @@ namespace gr {
 					                                d_nco_phasor,
 					                                &nco_phasor_0,
 					                                i_update);
-					update_phase(&d_phase_accum, d_phase_inc, i_update);
+					update_nco_phase(i_update);
 
 					/* Effectively update the freq. correction value */
 					d_f_e              = f_e;
@@ -358,8 +357,7 @@ namespace gr {
 					                                d_nco_phasor,
 					                                &nco_phasor_0,
 					                                (d_fft_len - i_update));
-					update_phase(&d_phase_accum, d_phase_inc,
-					             (d_fft_len - i_update));
+					update_nco_phase((d_fft_len - i_update));
 				} else {
 					/* Correct entire FFT block at once */
 					nco_phasor_0 = gr_expj(d_phase_accum);
@@ -368,7 +366,7 @@ namespace gr {
 					                                d_nco_phasor,
 					                                &nco_phasor_0,
 					                                d_fft_len);
-					update_phase(&d_phase_accum, d_phase_inc, d_fft_len);
+					update_nco_phase(d_fft_len);
 				}
 
 				/* Optional FFT output */

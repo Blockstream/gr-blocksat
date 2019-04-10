@@ -56,7 +56,7 @@ namespace gr {
 			int               d_i_sample;
 			bool              d_pend_corr_update;
 
-			void update_phase(float *phase, float phase_inc, int n_samples);
+			void update_nco_phase(int n_samples);
 
 		public:
 			ffw_coarse_freq_req_cc_impl(int fft_len, float alpha, int M,
