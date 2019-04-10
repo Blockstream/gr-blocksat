@@ -94,7 +94,8 @@ namespace gr {
 			d_alpha(0.1),
 			d_beta(1.0 - 0.1),
 			d_avg_freq_offset(0.0),
-			d_first_iter(true)
+			d_first_iter(true),
+			d_i_frame_start_pre_realign(0)
 		{
 			/* Constants
 			 *
@@ -353,7 +354,7 @@ namespace gr {
 					/* Just acquired frame timing lock */
 					if (d_success_cnt == d_n_success_to_lock) {
 						/* If we lock to an index that lies within a range of
-						 * "preamble_len" indexes by the end of the frame
+						 * "preamble_len - 1" indexes by the end of the frame
 						 * buffer, the math becomes complicated. This is because
 						 * in this case the preamble is partially on the current
 						 * buffer, and partially on the subsequent
@@ -361,13 +362,26 @@ namespace gr {
 						 * cross-correlations in two steps and save state in
 						 * between.
 						 *
-						 * As a workaround, instead of proceeding in this case,
-						 * just return and try again. Before returning, change
-						 * the number of consumed samples such that, next time,
-						 * the preamble lies in the beginning of the buffer.
+						 * As a workaround, instead of proceeding with the frame
+						 * lock in this case, just return and try again
+						 * later. When returning, consume only the samples of
+						 * the previous frame, such that, next time, the
+						 * preamble of the new frame lies in the beginning of
+						 * the input buffer. This effectively realigns the data.
+						 *
+						 * Note also that this will affect the notion of frame
+						 * start index that is kept upstream at the coarse
+						 * frequency recovery block. This is because the
+						 * freq. recovery block assumes the entire frame is
+						 * always consumed. To solve this, we need to save an
+						 * offset corresponding to the number of symbols
+						 * consumed next for data realignment. Later on, we use
+						 * this offset on the initial report sent to the
+						 * freq. recovery block with the start index.
 						 */
-						if (i_frame_start >= (d_frame_len - d_preamble_len)) {
-							n_consumed -= d_preamble_len;
+						if (i_frame_start > (d_frame_len - d_preamble_len)) {
+							n_consumed -= (d_frame_len - i_frame_start);
+							d_i_frame_start_pre_realign = i_frame_start;
 							consume_each(n_consumed);
 							return 0;
 						}
@@ -403,8 +417,12 @@ namespace gr {
 						 * message is just an initial guess. The starting index
 						 * to be used by the CFO recovery block is better tuned
 						 * later (below) iteratively.
+						 *
+						 * Consider also that the realignment described above
+						 * may have occured.
 						 */
-						d_start_idx_cfo = i_frame_start;
+						d_start_idx_cfo = (i_frame_start +
+						                   d_i_frame_start_pre_realign) % d_frame_len;
 						message_port_pub(pmt::mp("start_index"),
 						                 pmt::from_long(d_start_idx_cfo));
 					}
