@@ -449,6 +449,11 @@ namespace gr {
 						int tag_offset_err = tag_offset - d_i_frame_start;
 						d_start_idx_cfo -= tag_offset_err;
 
+						/* Put start index within [0, frame_len) */
+						d_start_idx_cfo %= d_frame_len;
+						if (d_start_idx_cfo < 0)
+							d_start_idx_cfo += d_frame_len;
+
 						/* Debug */
 						if (d_debug_level > 1) {
 							printf("%-21s Got CFO tag at offset: %d\t",
