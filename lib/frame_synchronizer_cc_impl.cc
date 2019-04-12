@@ -439,8 +439,8 @@ namespace gr {
 					std::vector<tag_t> tags;
 					get_tags_in_window(tags,
 					                   0,
-					                   i_offset + d_i_frame_start - d_preamble_len,
-					                   i_offset + d_i_frame_start + d_preamble_len,
+					                   i_offset,
+					                   i_offset + d_frame_len - 1,
 					                   pmt::mp("cfo"));
 					for (unsigned i = 0; i < tags.size(); i++) {
 						int tag_offset = tags[i].offset - nitems_read(0);
