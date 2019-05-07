@@ -1,6 +1,6 @@
 /* -*- c++ -*- */
 /*
- * Copyright 2017 <+YOU OR YOUR COMPANY+>.
+ * Copyright 2019 Blockstream Corp.
  *
  * This is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,6 +16,7 @@
  * along with this software; see the file COPYING.  If not, write to
  * the Free Software Foundation, Inc., 51 Franklin Street,
  * Boston, MA 02110-1301, USA.
+ *
  *
  * Data-aided Carrier Phase Recovery Loop
  *
