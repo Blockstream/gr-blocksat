@@ -25,7 +25,7 @@ from datetime import datetime
 from threading import Thread, Lock, Event
 from gnuradio import gr
 import blocksat
-from pipe import Pipe
+from .pipe import Pipe
 
 
 # Constants

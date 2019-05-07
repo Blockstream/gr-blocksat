@@ -22,16 +22,17 @@
 This is the GNU Radio BLOCKSAT module. Place your Python package
 description here (python/__init__.py).
 '''
+from __future__ import unicode_literals
 
 # import swig generated symbols into the blocksat namespace
 try:
-	# this might fail if the module is python-only
-	from blocksat_swig import *
+    # this might fail if the module is python-only
+    from .blocksat_swig import *
 except ImportError:
-	pass
+    pass
 
 # import any pure python here
-from protocol_sink import protocol_sink
-from tuning_control import tuning_control
-from rx_logger import rx_logger
-#
+from .protocol_sink import protocol_sink
+from .tuning_control import tuning_control
+from .rx_logger import rx_logger
+
