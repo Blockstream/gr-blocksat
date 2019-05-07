@@ -12,7 +12,6 @@
 #include "blocksat/mer_measurement.h"
 #include "blocksat/da_carrier_phase_rec.h"
 #include "blocksat/exponentiate_const_cci.h"
-#include "blocksat/argpeak.h"
 #include "blocksat/soft_decoder_cf.h"
 #include "blocksat/agc_cc.h"
 #include "blocksat/frame_synchronizer_cc.h"
@@ -28,8 +27,6 @@ GR_SWIG_BLOCK_MAGIC2(blocksat, mer_measurement);
 GR_SWIG_BLOCK_MAGIC2(blocksat, da_carrier_phase_rec);
 %include "blocksat/exponentiate_const_cci.h"
 GR_SWIG_BLOCK_MAGIC2(blocksat, exponentiate_const_cci);
-%include "blocksat/argpeak.h"
-GR_SWIG_BLOCK_MAGIC2(blocksat, argpeak);
 %include "blocksat/soft_decoder_cf.h"
 GR_SWIG_BLOCK_MAGIC2(blocksat, soft_decoder_cf);
 %include "blocksat/agc_cc.h"

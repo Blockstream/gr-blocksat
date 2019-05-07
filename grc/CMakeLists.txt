@@ -25,7 +25,6 @@ install(FILES
     blocksat_exponentiate_const_cci.xml
     blocksat_variable_tuning_control.xml
     blocksat_variable_rx_logger.xml
-    blocksat_argpeak.xml
     blocksat_soft_decoder_cf.xml
     blocksat_agc_cc.xml
     blocksat_frame_synchronizer_cc.xml
