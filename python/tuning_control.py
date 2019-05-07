@@ -150,7 +150,7 @@ class tuning_control(threading.Thread):
             # Exit scan
             self.scan_mode = False
 
-            print '\033[91m' + "ERROR:" + '\033[0m' + " Signal not found."
+            print('\033[91m' + "ERROR:" + '\033[0m' + " Signal not found.")
 
             os._exit(1)
           else:
@@ -240,8 +240,8 @@ class tuning_control(threading.Thread):
       if (update_freq and frame_sync_state != 0):
 
         print("\n--- Carrier Tracking Mechanism ---");
-        print "[" + datetime.datetime.now().strftime(
-          "%A, %d. %B %Y %I:%M%p" + "]")
+        print("[" + datetime.datetime.now().strftime(
+          "%A, %d. %B %Y %I:%M%p" + "]"))
         print("RF center frequency update");
         print("From:\t %d Hz (%6.2f MHz)" %(
           current_rf_center_freq, current_rf_center_freq/1e6));

@@ -396,7 +396,7 @@ class protocol_sink(gr.basic_block):
 
         # Validate (message should be a vector of u8, i.e. bytes)
         if not pmt.is_u8vector(msg):
-            print "[ERROR] Received invalid message type.\n"
+            print("[ERROR] Received invalid message type.\n")
             return
 
         # Convert incoming packet to a bytes string
