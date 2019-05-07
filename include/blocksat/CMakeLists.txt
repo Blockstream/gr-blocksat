@@ -21,8 +21,12 @@
 # Install public header files
 ########################################################################
 install(FILES
+    agc_cc.h
     api.h
-    turbo_decoder.h
+    da_carrier_phase_rec.h
+    ffw_coarse_freq_req_cc.h
+    frame_synchronizer_cc.h
     mer_measurement.h
-    da_carrier_phase_rec.h DESTINATION include/blocksat
+    soft_decoder_cf.h
+    turbo_decoder.h DESTINATION include/blocksat
 )
