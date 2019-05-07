@@ -19,14 +19,14 @@
 # Boston, MA 02110-1301, USA.
 
 install(FILES
-    blocksat_protocol_sink.xml
-    blocksat_turbo_decoder.xml
-    blocksat_mer_measurement.xml
-    blocksat_da_carrier_phase_rec.xml
-    blocksat_variable_tuning_control.xml
-    blocksat_variable_rx_logger.xml
-    blocksat_soft_decoder_cf.xml
-    blocksat_agc_cc.xml
-    blocksat_frame_synchronizer_cc.xml
-    blocksat_ffw_coarse_freq_req_cc.xml DESTINATION share/gnuradio/grc/blocks
+    blocksat_protocol_sink.block.yml
+    blocksat_turbo_decoder.block.yml
+    blocksat_mer_measurement.block.yml
+    blocksat_da_carrier_phase_rec.block.yml
+    blocksat_variable_tuning_control.block.yml
+    blocksat_variable_rx_logger.block.yml
+    blocksat_soft_decoder_cf.block.yml
+    blocksat_agc_cc.block.yml
+    blocksat_frame_synchronizer_cc.block.yml
+    blocksat_ffw_coarse_freq_req_cc.block.yml DESTINATION share/gnuradio/grc/blocks
 )
