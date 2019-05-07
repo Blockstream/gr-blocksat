@@ -28,7 +28,6 @@ link_directories(${Boost_LIBRARY_DIRS})
 list(APPEND blocksat_sources
     constellation.cc
     da_carrier_phase_rec_impl.cc
-    exponentiate_const_cci_impl.cc
     mer_measurement_impl.cc
     turbo_decoder_impl.cc
     aff3ct/Encoder_RSC_generic_sys.cpp

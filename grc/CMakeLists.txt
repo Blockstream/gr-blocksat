@@ -22,7 +22,6 @@ install(FILES
     blocksat_turbo_decoder.xml
     blocksat_mer_measurement.xml
     blocksat_da_carrier_phase_rec.xml
-    blocksat_exponentiate_const_cci.xml
     blocksat_variable_tuning_control.xml
     blocksat_variable_rx_logger.xml
     blocksat_soft_decoder_cf.xml
