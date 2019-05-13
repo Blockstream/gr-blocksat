@@ -19,7 +19,7 @@
 # Boston, MA 02110-1301, USA.
 #
 
-from gnuradio import gr, gr_unittest, digital, fec, analog
+from gnuradio import gr, gr_unittest, digital, analog
 from gnuradio import blocks
 from numpy import array
 import random
