@@ -66,10 +66,10 @@ class BlocksatPacket():
             raise InvalidHeader('Invalid header.')
 
         # Fill in the information from the header
-        self.pkt_type = chr(ord(header_data[0]) & ord(b'\x01'))
+        self.pkt_type = bytes([header_data[0][0] & b'\x01'[0]])
 
         # Check the more fragments field
-        self.more_fragments = (ord(header_data[0]) & ord(b'\x80')) != 0
+        self.more_fragments = ([header_data[0][0] & b'\x80'[0]]) != 0
 
         # Fill the payload
         self.payload = raw_packet[BLOCKSAT_PKT_HEADER_LEN:]
@@ -400,7 +400,7 @@ class protocol_sink(gr.basic_block):
             return
 
         # Convert incoming packet to a bytes string
-        raw_pkt = b''.join([chr(x) for x in pmt.u8vector_elements(msg)])
+        raw_pkt = bytes(pmt.u8vector_elements(msg))
 
         if (self.protocol_version > 1):
             # Parse Blocksat Packet
