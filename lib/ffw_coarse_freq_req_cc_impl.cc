@@ -79,7 +79,7 @@ namespace gr {
 			d_pend_f_e(0.0),
 			d_phase_inc(0.0),
 			d_phase_accum(0.0),
-			d_nco_phasor(0.0),
+			d_nco_phasor(1.0),
 			d_i_block(0),
 			d_n_equal_corr(0),
 			d_start_index(0),
